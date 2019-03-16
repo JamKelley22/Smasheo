@@ -1,10 +1,10 @@
-.. smasheo[D[D[D[D[D[S documentation master file, created by
-   sphinx-quickstart on Sat Mar 16 18:20:40 2019.
+.. smasheo documentation master file, created by
+   sphinx-quickstart on Sat Mar 16 15:53:17 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to smasheo[D[D[D[D[D[S's documentation!
-=====================================================
+Welcome to smasheo's documentation!
+===================================
 
 .. toctree::
    :maxdepth: 2

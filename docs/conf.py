@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'smasheo\x1b[D\x1b[D\x1b[D\x1b[D\x1b[D\x1b[S'
+project = 'smasheo'
 copyright = '2019, Brian Guidarini, Jameel Kelley'
 author = 'Brian Guidarini, Jameel Kelley'
 
