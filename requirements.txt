@@ -1,0 +1,7 @@
+nose
+sphinx
+opencv-python
+numpy
+imutils
+argparse
+matplotlib
