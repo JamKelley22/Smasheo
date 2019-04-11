@@ -56,7 +56,7 @@ def getAllMatches(mat1, mat2, duration):
             deltaReal = delta.real
             deltaImag = delta.imag
             deltaMagnitude = np.sqrt(deltaReal * deltaReal + deltaImag * deltaImag)
-            if (abs(deltaMagnitude) <= 7):
+            if (abs(deltaMagnitude) <= 5):
                 numCloseMatches += 1
         mat2FreqIndex += 1
         if mat2FreqIndex == len(mat2):
@@ -64,10 +64,12 @@ def getAllMatches(mat1, mat2, duration):
             bins = len(mat2[0])
             samples = len(mat2)
             n = bins * samples
-            if (numCloseMatches >=45):
+            if (numCloseMatches >=30):
                 output.append(i * timeSampleRatio)
+                print i * timeSampleRatio
                 #print str(i) + ": " + str(numCloseMatches) + " / " + str(len(mat2) * 1024)
             numCloseMatches = 0
+    return output
 
 def getAudioDuration(directory):
     audio = wave.open(directory, 'r')
