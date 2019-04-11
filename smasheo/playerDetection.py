@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 import sys
+sys.path.insert(0, '../utils')
+import Complex
+import fft
+sys.path.insert(0, '../')
+import test
 
 # Orange: R: 255 G: 141 B: 0
 # Red: R 237 G: 0 B: 1
@@ -31,6 +36,7 @@ def findDedede(frm):
 
 clips = ['../replays/replay3.mp4']
 for i in range(len(clips)):
+    upSmashes = test.main()
     vid = cv2.VideoCapture(clips[i])
     width = int(vid.get(3))
     height = int(vid.get(4))

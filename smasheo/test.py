@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-sys.path.insert(0, './utils')
 import Complex as cmplx
 import fft
 import wave
@@ -40,7 +39,8 @@ def getFFTMatrix(input, out, mp4):
     return mat
 
 def getAllMatches(mat1, mat2, duration):
-
+    timeSampleRatio = duration / len(mat1)
+    output = []
     if len(mat1) < len(mat2):
         print("The first matrix needs to be bigger")
         return
@@ -65,7 +65,8 @@ def getAllMatches(mat1, mat2, duration):
             samples = len(mat2)
             n = bins * samples
             if (numCloseMatches >=45):
-                print str(i) + ": " + str(numCloseMatches) + " / " + str(len(mat2) * 1024)
+                output.append(i * timeSampleRatio)
+                #print str(i) + ": " + str(numCloseMatches) + " / " + str(len(mat2) * 1024)
             numCloseMatches = 0
 
 def getAudioDuration(directory):
@@ -82,14 +83,9 @@ def main():
     mat2 = getFFTMatrix("./dededehit.wav", "./dededehit.wav", False)
     print "finished FFT"
     print duration
-    getAllMatches(mat1, mat2, duration)
+    times = getAllMatches(mat1, mat2, duration)
     print "finished searching"
 
+    return times
 
-    file = open("dedefft.txt", "w")
-    for i in range(0, len(mat2)):
-        file.write(str(len(mat2[i])) + " " )
-        for j in range (0, len(mat2[i])):
-            file.write(str(mat2[i][j]) + ",")
-        file.write("\n")
-main()
+#main()
