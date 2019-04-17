@@ -34,7 +34,7 @@ class Complex:
         iamg1 = abs(imag)
         return Complex(real, imag)
 
-    def scale(scalar):
+    def scale(self, scalar):
         return Complex(self.real * scalar, self.imag * scalar)
 
     def __str__(self):
