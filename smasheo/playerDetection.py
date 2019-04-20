@@ -4,6 +4,7 @@ import sys
 import Complex
 import fft
 import test
+import movingAvg as mv
 
 dedePos = [];
 
@@ -68,9 +69,12 @@ def drawAttack(frm):
     cv2.putText(frm, "Up smash",(120, 250),cv2.FONT_HERSHEY_SIMPLEX, 1, (255,100,255), 2, cv2.LINE_AA)
     return frm
 
+def drawPoint(frm, pos):
+    frm[pos[1]:pos[1] + 5, pos[0]:pos[0] + 5] = (0, 255, 0)
+
 clips = ['../replays/replay1.mp4']
 for i in range(len(clips)):
-    upSmashes = [500000]*2#test.main()
+    upSmashes = test.main()
     vid = cv2.VideoCapture(clips[i])
     width = int(vid.get(3))
     height = int(vid.get(4))
@@ -80,7 +84,7 @@ for i in range(len(clips)):
     count = 0
     attackFrame = 0
     doDrawAttack = False
-    hammerAvg = []
+    hammerAvg = mv.MovingAvg(0, 10)
     while(vid.isOpened()):
         val, frm = vid.read()
         if val == True:
@@ -97,14 +101,26 @@ for i in range(len(clips)):
             hammerPos = findHammer(hideDKFrm)
             labelFrame = drawLabel(clone, hammerPos[4], hammerPos[1], hammerPos[0], (0, 0, 255))
 
+            hammerAvg.insert((hammerPos[0], hammerPos[1]))
+            #hammerAvg.printSet()
+            displacement = hammerAvg.getDisplacement()
+            dX = displacement[0]
+            dY = displacement[1]
+            # if dY < 7 and dY > -7 and dX > 30:
+            #     doDrawAttack = True
+            #     attackFrame = count
+
+            for i in range(0, len(hammerAvg.getSet())):
+                drawPoint(labelFrame, hammerAvg.getSet()[i])
             #dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
+
             if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
                 upSmashes.pop(0)
                 doDrawAttack = True
                 attackFrame = count
                 print timeStamp, upSmashes[0]
             if (doDrawAttack):
-                dedeFrame = drawAttack(dedeFrame)
+                labelFrame = drawAttack(labelFrame)
                 if (count - attackFrame >= 30):
                     doDrawAttack = False
 

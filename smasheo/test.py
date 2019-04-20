@@ -9,6 +9,11 @@ import struct
 import array
 import os
 import fft
+import stats
+
+MAX_DIFF = 10
+MIN_MATCHES = 7000
+NUM_BINS = 128
 
 def getFFTMatrix(input, out, mp4, fftsize):
     file_replay = Path(out)
@@ -25,52 +30,73 @@ def getFFTMatrix(input, out, mp4, fftsize):
     bytes = a.tolist()
     audio.close()
     complexNums = map(cmplx.Complex, bytes)
+
     print len(complexNums)
     print "Samples: " + str(len(bytes))
     mat = []
     prev = []
     ifft = []
     print len(mat)
+    # for i in range(0, len(complexNums)):
+    #     multiplier = 0.5 * (1 - np.cos(2 * np.pi * i / (fftsize - 1)))
+    #     complexNums[i] = complexNums[i].scale(multiplier)
     for i in range(1, len(complexNums)/fftsize):
         start = (i - 1) * fftsize
         stop  = i * fftsize
         mat.append(fft.fft(complexNums[start:stop]))
-        prev.append(complexNums[start:stop])
+        #prev.append(complexNums[start:stop])
 
-    if mp4 == False:
-        fft.matrixToCSV(prev, "./dedede512.csv")
+    # if mp4 == False:
+    #     fft.matrixToCSV(prev, "./dedede512.csv")
     return mat
 
-def getAllMatches(mat1, mat2, duration):
+def getAllMatches(mat1, mat2, duration, FFTSize):
     timeSampleRatio = duration / len(mat1)
     output = []
     if len(mat1) < len(mat2):
-        print("The first matrix needs to be bigger")
+        print("The first matrix needs to be bigger than the second")
         return
     if len(mat1[0]) != len(mat2[0]):
         print "Frequency bin size mismatch"
     numCloseMatches = 0
     mat2FreqIndex = 0
+    avgPhase = 0
+    avgReal = 0
+    avgImag = 0
+    avgMag = 0
     for i in range(0, len(mat1)):
-        for j in range(0, len(mat2)):
+        cc = stats.crossCorrelate(mat1[i], mat2[mat2FreqIndex], FFTSize)
+        ccMag = np.sqrt(cc[0] * cc[0] + cc[1] * cc[1])
+        for j in range(0, NUM_BINS):
             delta = mat2[mat2FreqIndex][j].sub(mat1[i][j])
-            mat1Real = mat1[i][j].real
-            mat1Imag = mat1[i][j].imag
-            deltaReal = delta.real
-            deltaImag = delta.imag
-            deltaMagnitude = np.sqrt(deltaReal * deltaReal + deltaImag * deltaImag)
-            if (abs(deltaMagnitude) <= 10):
+            intensity1 = fft.getIntensity(mat1[i][j], j)
+            intensity2 = fft.getIntensity(mat2[mat2FreqIndex][j], j)
+            deltaIntensity = intensity2 - intensity1
+
+            if (abs(deltaIntensity) <= MAX_DIFF):
+                avgPhase += delta.getPhase()
+                avgReal += delta.real
+                avgImag += delta.imag
                 numCloseMatches += 1
+            magnitude = np.sqrt(delta.real * delta.real + delta.imag * delta.imag)
+            avgMag += magnitude
         mat2FreqIndex += 1
-        print numCloseMatches
         if mat2FreqIndex == len(mat2):
             mat2FreqIndex = 0
             bins = len(mat2[0])
             samples = len(mat2)
             n = bins * samples
-            if (numCloseMatches >=10):
+            if (numCloseMatches >= MIN_MATCHES):
+                sumPhase = avgPhase
+                magSum = avgMag
+                avgMag /= numCloseMatches
+                avgPhase /= numCloseMatches
+                avgReal /= numCloseMatches
+                avgImag /= numCloseMatches
+                time = i * timeSampleRatio
+                print numCloseMatches, time, (avgReal/avgImag), magSum, avgMag, sumPhase, avgPhase, avgReal, avgImag
                 output.append(i * timeSampleRatio)
-                print i * timeSampleRatio
+                print cc
                 #print str(i) + ": " + str(numCloseMatches) + " / " + str(len(mat2) * 1024)
             numCloseMatches = 0
     return output
@@ -84,15 +110,20 @@ def getAudioDuration(directory):
     return duration*1000
 
 def main():
+    fftSize = 256
     duration = getAudioDuration("./audio.wav")
-    mat1 = getFFTMatrix("../replays/replay1.mp4", "./audio.wav", True, 512)
-    #fft.matrixToCSV(mat1, "./replay1FFT256.csv")
-    mat2 = getFFTMatrix("./dededehit.wav", "./dededehit.wav", False, 512)
-    fft.matrixToCSV(mat2, "./dededeFFT256.csv")
+    mat1 = getFFTMatrix("../replays/replay1.mp4", "./audio.wav", True, fftSize)
+    fft.matrixToCSV(mat1, "./replay1FFT256.csv")
+    mat2 = getFFTMatrix("./dededehit.wav", "../Audio/King Dedede Sounds/dedeUpSmash3.wav", False, fftSize)
+    #mat3 = mat2
+    # for i in range (0, len(mat2)):
+    #     cc = stats.crossCorrelate(mat2[i], mat3[i], 256)
+    #     print np.sqrt(cc[0] * cc[0] + cc[1] * cc[1])
+    #fft.matrixToCSV(mat2, "./dededeFFT512")
 
     print "finished FFT"
     print duration
-    times = getAllMatches(mat1, mat2, duration)
+    times = getAllMatches(mat1, mat2, duration, 512)
     print "finished searching"
 
     return times
