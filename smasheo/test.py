@@ -12,7 +12,7 @@ import fft
 import stats
 
 MAX_DIFF = 10
-MIN_MATCHES = 5000
+MIN_MATCHES = 1500
 NUM_BINS = 50
 
 def getFFTMatrix(input, out, mp4, fftsize):
@@ -103,7 +103,8 @@ def getAllMatches2(mat1, mat2, FFTSize):
             if (atLeastCount >= MIN_MATCHES):
                 output.append(i)
                 print i, atLeastCount
-                atLeastCount = 0
+
+            atLeastCount = 0
             mat2FreqIndex = 0
 
     return output
