@@ -73,7 +73,8 @@ def correlateMatches(mat1, mat2, duration, matches, FFTSize):
                 if refMat[j][k] - rMag <= 0.5:
                     numTwos += 1
         print start * timeSampleRatio, numTwos
-        output.append(start)
+        if numTwos > 1:
+            output.append(start * timeSampleRatio)
         numTwos = 0
     return output
 
