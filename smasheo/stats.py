@@ -14,8 +14,8 @@ def crossCorrelate(signal1, signal2, delay):
     for i in range(0, size):
         avg1real += signal1[i].real
         avg1imag += signal1[i].imag
-        avg2real += signal1[i].real
-        avg2imag += signal1[i].imag
+        avg2real += signal2[i].real
+        avg2imag += signal2[i].imag
 
     avg1real /= size
     avg1imag /= size
@@ -29,31 +29,31 @@ def crossCorrelate(signal1, signal2, delay):
 
     for i in range(0, size):
         avgSqDiff1real += (signal1[i].real - avg1real) * (signal1[i].real - avg1real)
-        avgSqDiff1imag += (signal1[i].imag - avg1real) * (signal1[i].imag - avg1real)
-        avgSqDiff2real += (signal1[i].real - avg1real) * (signal1[i].real - avg1real)
-        avgSqDiff2imag += (signal1[i].imag - avg1real) * (signal1[i].imag - avg1real)
+        avgSqDiff1imag += (signal1[i].imag - avg1imag) * (signal1[i].imag - avg1imag)
+        avgSqDiff2real += (signal2[i].real - avg2real) * (signal2[i].real - avg2real)
+        avgSqDiff2imag += (signal2[i].imag - avg2imag) * (signal2[i].imag - avg2imag)
     denominatorReal = np.sqrt(avgSqDiff1real * avgSqDiff2real)
     denominatorImag = np.sqrt(avgSqDiff1imag * avgSqDiff2imag)
 
     rReal = 0
     rImag = 0
-    for i in range(delay * -1, delay):
+    for i in range(-delay, delay):
         subReal = 0
         subImag = 0
         for j in range(0, size):
-            k = j + delay
+            k = j + i
             #print i, j, k, size
             if k < 0 or k >= size:
                 continue
             else:
-                subReal += (signal1[j].real - avg1real) * (signal2[k].real - avg2real)
-                subImag += (signal1[j].imag - avg1imag) * (signal2[k].imag - avg2imag)
+                subReal += (signal1[j].real - avg1real) * (signal2[j].real - avg2real)
+                subImag += (signal1[j].imag - avg1imag) * (signal2[j].imag - avg2imag)
             if k < 0 or k >= size:
                 subReal += (signal1[j].real - avg1real) * -avg2real
                 subImag += (signal1[j].imag - avg1imag) * -avg2imag
             else:
-                 subReal += (signal1[j].real - avg1real) * (signal2[k].real - avg2real)
-                 subImag += (signal1[j].imag - avg1imag) * (signal2[k].imag - avg2imag)
+                 subReal += (signal1[j].real - avg1real) * (signal2[j].real - avg2real)
+                 subImag += (signal1[j].imag - avg1imag) * (signal2[j].imag - avg2imag)
             rReal = subReal / denominatorReal
             rImag = subImag / denominatorImag
 
