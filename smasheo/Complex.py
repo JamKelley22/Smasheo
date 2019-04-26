@@ -1,4 +1,6 @@
 
+import numpy as np
+
 class Complex:
     real = 0.0
     imag = 0.0
@@ -34,8 +36,18 @@ class Complex:
         iamg1 = abs(imag)
         return Complex(real, imag)
 
-    def scale(scalar):
+    def scale(self, scalar):
         return Complex(self.real * scalar, self.imag * scalar)
+
+    def getPhase(self):
+        real = self.real
+        imag = self.imag
+        return np.arctan2(imag, real)
+
+    def getConj(self):
+        real = self.real
+        imag = -1 * self.imag
+        return Complex(real, imag)
 
     def __str__(self):
         return str(self.real) + " + " + str(self.imag) + "i"
