@@ -50,7 +50,26 @@ def getFFTMatrix(input, out, mp4, fftsize):
     #     fft.matrixToCSV(prev, "./dedede512.csv")
     return mat
 
-#def correlateVectors(mat1, mat2, duration, FFTSize):
+def correlateVectors(mat1, mat2, duration, FFTSize):
+    mat2Count = 0
+    refMat1 = []
+    refMat2 = []
+    timeList = []
+    for i in range(0, len(mat1)):
+        vec1 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat2[mat2Count][0:NUM_BINS])
+        vec3 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat1[i][0:NUM_BINS])
+        imag = np.correlate(vec1, vec1)
+        imag2 = np.correlate(vec1, vec3)
+        time = i * (duration/len(mat1))
+        delta = np.abs(imag-imag2)
+        if (delta <= 150000000):
+            refMat1.append(mat1[i])
+            timeList.append(time)
+            print time, imag, imag2, delta
+        mat2Count += 1
+        if mat2Count == len(mat2):
+            mat2Count = 0
+    return timeList, refMat1
 
 
 def correlateMatches(mat1, mat2, duration, timeVec, matches, FFTSize):
@@ -200,24 +219,7 @@ def main():
     mat1 = getFFTMatrix("../replays/replay1.mp4", "./audio.wav", True, fftSize)
     # #fft.matrixToCSV(mat1, "./replay1FFT256.csv")
     mat3 = mat2
-    mat2Count = 0
-    refMat1 = []
-    refMat2 = []
-    timeList = []
-    for i in range(0, len(mat1)):
-        vec1 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat2[mat2Count][0:NUM_BINS])
-        vec3 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat1[i][0:NUM_BINS])
-        imag = np.correlate(vec1, vec1)
-        imag2 = np.correlate(vec1, vec3)
-        time = i * (duration/len(mat1))
-        delta = np.abs(imag-imag2)
-        if (delta <= 150000000):
-            refMat1.append(mat1[i])
-            timeList.append(time)
-            print time, imag, imag2, delta
-        mat2Count += 1
-        if mat2Count == len(mat2):
-            mat2Count = 0
+
     # for i in range (0, len(mat2)/2):
     #     for j in range(0, len(mat2)/2):
     #         cc = stats.crossCorrelate(mat2[i], mat3[i], j)
@@ -226,7 +228,7 @@ def main():
     #         ccSelfMag = np.sqrt(ccSelf[0] * ccSelf[0] + ccSelf[1] * ccSelf[1])
     #         print np.sqrt(cc[0] * cc[0] + cc[1] * cc[1]), ccSelf, cc, ccMag, ccSelfMag, ccSelfMag - ccMag, i, j
     #fft.matrixToCSV(mat2, "./dededeFFT512")
-
+    timeList, refMat1 = correlateVectors(mat1, mat2, duration, fftSize)
     print "finished FFT"
     print duration
     matches,nTimes = getAllMatches2(refMat1, mat2, timeList, fftSize)

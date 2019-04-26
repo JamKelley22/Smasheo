@@ -5,6 +5,7 @@ import Complex
 import fft
 import test
 import movingAvg as mv
+import audioProcessing as ap
 
 dedePos = [];
 
@@ -50,15 +51,27 @@ def findDedede(frm):
 
 def findHammer(frm):
     se = np.ones((6,6))
-    low = (17, 41, 92)
+    low = (17, 60, 92)
     high = (92, 165, 204)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, low, high)
     mask[0:150, 0:width] = 0
     mask[600:height, 0:width] = 0
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
+    #mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "Hammer");
+
+def findPlatforms(frm):
+    se = np.ones((6,6))
+    low = (26, 30, 40)
+    high = (33, 89, 90)
+    hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, low, high)
+    mask[0:150, 0:width] = 0
+    mask[600:height, 0:width] = 0
+    #mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
+    mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
+    return mask#findTarget(mask, frm, "Platform");
 
 def hideDK(frm, dkPos):
     #cv2.rectangle(frm, (dkPos[0], dkPos[1]), (dkPos[0] + dkPos[3], dkPos[1] + dkPos[2]), (0,0,0), cv2.FILLED)
@@ -74,7 +87,7 @@ def drawPoint(frm, pos):
 
 clips = ['../replays/replay1.mp4']
 for i in range(len(clips)):
-    upSmashes = test.main()
+    upSmashes = ap.main()#test.main()
     vid = cv2.VideoCapture(clips[i])
     width = int(vid.get(3))
     height = int(vid.get(4))
@@ -94,8 +107,10 @@ for i in range(len(clips)):
             dummy, bw = cv2.threshold(bw, 100, 255, cv2.THRESH_BINARY)
             dedePos = findDedede(frm)
             dkPos = findDK(frm)
+            platPos = findPlatforms(frm)
             labelFrame = drawLabel(frm, dedePos[4], dedePos[1], dedePos[0], (0, 0, 255))
             labelFrame = drawLabel(labelFrame, dkPos[4], dkPos[1], dkPos[0], (0, 0, 255))
+            #labelFrame = drawLabel(labelFrame, platPos[4], platPos[1], platPos[0], (0, 0, 255))
             clone = np.copy(labelFrame)
             hideDKFrm = hideDK(frm, dkPos)
             hammerPos = findHammer(hideDKFrm)
@@ -129,7 +144,7 @@ for i in range(len(clips)):
                 break
 
             count += 1
-            writer.write(frm)
+            writer.write(labelFrame)
             if (cv2.waitKey(25) & 0xFF == ord('q')):
                 break
         else:

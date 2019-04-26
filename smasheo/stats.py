@@ -58,3 +58,8 @@ def crossCorrelate(signal1, signal2, delay):
             rImag = subImag / denominatorImag
 
     return rReal, rImag
+
+def withinPercentage(num1, num2, percent):
+    if num2 / num1 >= percent:
+        return True
+    return False
