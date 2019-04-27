@@ -51,13 +51,13 @@ def findDedede(frm):
 
 def findHammer(frm):
     se = np.ones((6,6))
-    low = (17, 60, 92)
+    low = (17, 41, 92)
     high = (92, 165, 204)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, low, high)
     mask[0:150, 0:width] = 0
     mask[600:height, 0:width] = 0
-    #mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "Hammer");
 
@@ -87,7 +87,7 @@ def drawPoint(frm, pos):
 
 clips = ['../replays/replay3.mp4']
 for i in range(len(clips)):
-    upSmashes = ap.main()#test.main()
+    upSmashes = [500000, 508508680]#ap.main()
     vid = cv2.VideoCapture(clips[i])
     width = int(vid.get(3))
     height = int(vid.get(4))
@@ -108,7 +108,6 @@ for i in range(len(clips)):
             dummy, bw = cv2.threshold(bw, 100, 255, cv2.THRESH_BINARY)
             dedePos = findDedede(frm)
             dkPos = findDK(frm)
-            platPos = findPlatforms(frm)
             labelFrame = drawLabel(frm, dedePos[4], dedePos[1], dedePos[0], (0, 0, 255))
             labelFrame = drawLabel(labelFrame, dkPos[4], dkPos[1], dkPos[0], (0, 0, 255))
             #labelFrame = drawLabel(labelFrame, platPos[4], platPos[1], platPos[0], (0, 0, 255))
@@ -125,7 +124,7 @@ for i in range(len(clips)):
             # if dY < 7 and dY > -7 and dX > 30:
             #     doDrawAttack = True
             #     attackFrame = count
-
+            print(hammerAvg.area())
             for i in range(0, len(hammerAvg.getSet())):
                 drawPoint(labelFrame, hammerAvg.getSet()[i])
             #dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)

@@ -14,6 +14,11 @@ import stats
 MAX_DIFF = 10
 MIN_MATCHES = 100
 NUM_BINS = 75
+#plat template: [x1, x2, y]
+BIG_PLAT = [196, 1080, 575]
+S_L_PLAT = [305, 505, 445]
+S_M_PLAT = [540, 740, 318]
+S_R_PLAT = [770, 970, 445]
 
 def getFFTMatrix(input, out, mp4, fftsize):
     file_replay = Path(out)
