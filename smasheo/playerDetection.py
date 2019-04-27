@@ -91,9 +91,10 @@ for i in range(len(clips)):
     vid = cv2.VideoCapture(clips[i])
     width = int(vid.get(3))
     height = int(vid.get(4))
+    fps = int(vid.get(5))
     fourcc = cv2.VideoWriter_fourcc('H','2','6','4')
     title = "output" + str(i) + ".mp4"
-    writer = cv2.VideoWriter(title, fourcc,60.0,(width, height))
+    writer = cv2.VideoWriter(title, fourcc,fps,(width, height))
     count = 0
     attackFrame = 0
     doDrawAttack = False
