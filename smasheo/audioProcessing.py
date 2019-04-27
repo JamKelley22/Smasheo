@@ -55,6 +55,7 @@ def correlateVectors(mat1, mat2, duration, FFTSize):
     refMat1 = []
     refMat2 = []
     timeList = []
+    refMat1 = []
     for i in range(0, len(mat1)):
         vec1 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat2[mat2Count][0:NUM_BINS])
         vec3 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat1[i][0:NUM_BINS])
@@ -109,9 +110,6 @@ def getAllMatches2(mat1, mat2, timeList, FFTSize):
     output = []
     nTimeList = []
     atLeastCount = 0
-    if len(mat1) < len(mat2) :
-        print "size mismatch"
-        return
     if len(mat1[0]) != len(mat2[0]):
         print "Bin mismatch"
         return
@@ -124,9 +122,65 @@ def getAllMatches2(mat1, mat2, timeList, FFTSize):
                 cmplx2 = mat2[j][k]
                 mat1Mag = np.sqrt(cmplx1.real * cmplx1.real + cmplx1.imag * cmplx1.imag)
                 mat2Mag = np.sqrt(cmplx2.real * cmplx2.real + cmplx2.imag * cmplx2.imag)
-                if mat1Mag <= mat2Mag:
+                if mat1Mag <= mat2Mag and mat1Mag > 1000 and mat2Mag > 1000:
                     atLeastCount += 1
-        if (atLeastCount >= 1000 and atLeastCount <= 3000 ):
+        if (atLeastCount >= 1000 and atLeastCount <= 3000):
+            output.append(i)
+            nTimeList.append(timeList[i])
+            print timeList[i], i, atLeastCount
+        atLeastCount = 0
+    return output, nTimeList
+
+def getAllMatches(mat1, mat2, duration, FFTSize):
+    timeSampleRatio = duration / len(mat1)
+    output = []
+    if len(mat1) < len(mat2):
+        print("The first matrix needs to be bigger than the second")
+        return
+    if len(mat1[0]) != len(mat2[0]):
+        print "Frequency bin size mismatch"
+    numCloseMatches = 0
+    mat2FreqIndex = 0
+    avgPhase = 0
+    avgReal = 0
+    avgImag = 0
+    avgMag = 0
+    ccMagAvg = 0
+    ccSelfMagAvg = 0
+    avgDelta = 0
+    for i in range(0, len(mat1)):
+
+        for j in range(0, NUM_BINS):
+            cc = stats.crossCorrelate(mat1[i][0:NUM_BINS], mat2[mat2FreqIndex][0:NUM_BINS], j)
+            ccMag = np.sqrt(cc[0] * cc[0] + cc[1] * cc[1])
+            ccSelf = stats.crossCorrelate(mat2[mat2FreqIndex][0:NUM_BINS], mat2[mat2FreqIndex][0:NUM_BINS], j)
+            ccSelfMag = np.sqrt(ccSelf[0] * ccSelf[0] + ccSelf[1] * ccSelf[1]) - ccMag
+            ccSelfMagAvg += ccSelfMag
+            ccMagAvg += ccMag
+            delta = mat2[mat2FreqIndex][j]
+
+
+def getAllMatches2(mat1, mat2, timeList, FFTSize):
+    matReconstructed = []
+    mat2Mag = []
+    output = []
+    nTimeList = []
+    atLeastCount = 0
+    if len(mat1[0]) != len(mat2[0]):
+        print "Bin mismatch"
+        return
+    mat2FreqIndex = 0
+    #For every vector in mat1, compare it to every vector in mat2
+    for i in range(0, len(mat1)):
+        for j in range(0, len(mat2)):
+            for k in range(0, NUM_BINS):
+                cmplx1 = mat1[i][k]
+                cmplx2 = mat2[j][k]
+                mat1Mag = np.sqrt(cmplx1.real * cmplx1.real + cmplx1.imag * cmplx1.imag)
+                mat2Mag = np.sqrt(cmplx2.real * cmplx2.real + cmplx2.imag * cmplx2.imag)
+                if mat1Mag <= mat2Mag and mat1Mag > 1000 and mat2Mag > 1000:
+                    atLeastCount += 1
+        if (atLeastCount >= 2000):
             output.append(i)
             nTimeList.append(timeList[i])
             print timeList[i], i, atLeastCount
@@ -174,6 +228,21 @@ def getAllMatches(mat1, mat2, duration, FFTSize):
         mat2FreqIndex += 1
         if mat2FreqIndex == len(mat2):
             mat2FreqIndex = 0
+            bins = len(mat2[0]).sub(mat1[i][j])
+            intensity1 = fft.getIntensity(mat1[i][j], j)
+            intensity2 = fft.getIntensity(mat2[mat2FreqIndex][j], j)
+            deltaIntensity = intensity2 - intensity1
+            avgPhase += delta.getPhase()
+            avgReal += delta.real
+            avgImag += delta.imag
+
+            if ccSelfMag <= 0.5:#(abs(deltaIntensity) <= MAX_DIFF):
+                numCloseMatches += 1
+            magnitude = np.sqrt(delta.real * delta.real + delta.imag * delta.imag)
+            avgMag += magnitude
+        mat2FreqIndex += 1
+        if mat2FreqIndex == len(mat2):
+            mat2FreqIndex = 0
             bins = len(mat2[0])
             samples = len(mat2)
             n = bins * samples
@@ -203,6 +272,7 @@ def getAllMatches(mat1, mat2, duration, FFTSize):
             numCloseMatches = 0
     return output
 
+
 def getAudioDuration(directory):
     audio = wave.open(directory, 'r')
     frames = audio.getnframes()
@@ -213,10 +283,10 @@ def getAudioDuration(directory):
 
 def main():
     fftSize = 256
-    duration = getAudioDuration("./audio.wav")
+    duration = getAudioDuration("../Audio/games/audio3.wav")
     mat2 = getFFTMatrix("./dededehit.wav", "../Audio/King Dedede Sounds/dedeUpSmash2.wav", False, fftSize)
     #print len(mat2)
-    mat1 = getFFTMatrix("../replays/replay1.mp4", "./audio.wav", True, fftSize)
+    mat1 = getFFTMatrix("../replays/replay3.mp4", "../Audio/games/audio3.wav", True, fftSize)
     # #fft.matrixToCSV(mat1, "./replay1FFT256.csv")
     mat3 = mat2
 
@@ -230,12 +300,7 @@ def main():
     #fft.matrixToCSV(mat2, "./dededeFFT512")
     timeList, refMat1 = correlateVectors(mat1, mat2, duration, fftSize)
     print "finished FFT"
-    print duration
     matches,nTimes = getAllMatches2(refMat1, mat2, timeList, fftSize)
-    print matches
-    #times = correlateMatches(mat1, mat2, duration, nTimes, matches, fftSize)
-    #print times
-    #times = correlateMatches(mat1, mat2, duration, matches, fftSize)
     print "finished searching"
 
     return nTimes

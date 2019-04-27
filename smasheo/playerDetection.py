@@ -85,7 +85,7 @@ def drawAttack(frm):
 def drawPoint(frm, pos):
     frm[pos[1]:pos[1] + 5, pos[0]:pos[0] + 5] = (0, 255, 0)
 
-clips = ['../replays/replay1.mp4']
+clips = ['../replays/replay3.mp4']
 for i in range(len(clips)):
     upSmashes = ap.main()#test.main()
     vid = cv2.VideoCapture(clips[i])
