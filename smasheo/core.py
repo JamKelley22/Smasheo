@@ -12,11 +12,12 @@ import movingAvg as mv
 import audioProcessing as ap
 import stockDetection
 import playerDetection as pd
+import stats
 
 def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame):
 	if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
 		time = upSmashes.pop(0)
-		if (hammerArea >= UP_HAMM_AREA_MIN and dedeOnPlat):
+		if (hammerArea >= pd.UP_HAMM_AREA_MIN and dedeOnPlat):
 			doDrawAttacks = True
 			attackFrame = count
 			#print timeStamp, upSmashes[0]
@@ -29,7 +30,7 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 	removeLater = []
 	for i in range(0, len(movesOnHold)):
 		held = movesOnHold[i]
-		if (hammerArea >= UP_HAMM_AREA_MIN and dedeOnPlat):
+		if (hammerArea >= pd.UP_HAMM_AREA_MIN and dedeOnPlat):
 			doDrawAttack = True
 			attackFrame = count
 		elif count > held[2]:
@@ -58,6 +59,15 @@ def trackStock(curStockD, curStockK, labelFrame, count):
 		curStockK = frmStockK
 	return curStockD, curStockK
 
+def damageToInt(dam):
+	incr = 1
+	num = 0
+	for i in range(len(dam)-1, 0, -1):
+		if dam[i] != -1:
+			num += incr * dam[i]
+		incr *= 10
+	return num
+
 def main():
 	tracker = []
 
@@ -81,27 +91,36 @@ def main():
 	attackFrame = 0
 	doDrawAttack = False
 	hammerAvg = mv.MovingAvg(0, 10)
+	dedeAvg = mv.MovingAvg(0, 10)
 	            #ID, time, timeout
 	movesOnHold = []
 	curStockD = 0
 	curStockK = 0
-
+	initStock = 0
 	while True:
 		frame = vs.read()
 		frame = frame[1]
 		if frame is None:
 			break
 
-		print(damage.whatsYourDamage(frame,frame_width,frame_height))
 		cv2.waitKey(17)
 		timeStamp = count * 16.6667
 
 		labelFrame, dedePos, hammerPos, kirbyPos = trackObjects(frame, hammerAvg)
+
+		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
+		dmgD = damageToInt(dmg[0])
+		dmgK = damageToInt(dmg[1])
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
+		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
+		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+
+		if (count == 0):
+			initStock = curStockD
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
 		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame)
-		
+		#print stats.guessProspects(initStock, curStockD, curStockK, )
 		# for i in range(0, len(hammerAvg.getSet())):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
 		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
@@ -114,12 +133,19 @@ def main():
 		if (cv2.waitKey(25) & 0xFF == ord('q')):
 			break
 
+		# if (cv2.waitKey(25) & 0xFF == ord('t')):
+		# 	tracker.append("1")
+		# else:
+		# 	tracker.append("0")
+
+		#print tracker
 		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
 
 		if key == ord("q"):
 			break
 
+	print np.sum(tracker), count
 	vs.release()
 	#out.release()
 	cv2.destroyAllWindows()

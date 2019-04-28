@@ -63,3 +63,22 @@ def withinPercentage(num1, num2, percent):
     if np.abs(num1 / num2) <= (1-percent):
         return True
     return False
+
+def guessProspects(initStock, stockD, stockK, damageD, damageK):
+    dedeChance = 50
+    kirbyChance = 50
+    if stockD < stockK:
+        dedeChance -= (stockD / stockK) * 100
+        kirbyChance += (stockD / stockK) * 100
+    elif stockK > stockD:
+        dedeChance += (stockK / stockD) * 100
+        kirbyChance -= (stockK / stockD) * 100
+
+    if damageD < damageK:
+        dedeChance -= ((damageK - damageD)/5) / stockD
+        kirbyChance += ((damageK - damageD)/5) / stockD
+    elif damageK > damageD:
+        dedeChance += ((damageD - damageK)/5) / stockD
+        kirbyChance -= ((damageD - damageK)/5) / stockD
+
+    return dedeChance, kirbyChance
