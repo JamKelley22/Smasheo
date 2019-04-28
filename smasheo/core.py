@@ -231,18 +231,21 @@ def smash(stdscr):
 		if count == 0:
 			initFrame = frame
 
-		cv2.waitKey(17)
+		cv2.waitKey(1)#17
 		timeStamp = count * 16.6667
 
 		labelFrame, dedePos, hammerPos, kirbyPos = trackObjects(frame, hammerAvg)
 
-		kPosArr.append((kirbyPos[1],kirbyPos[0]))
+		kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
 		dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
 
-		dHeatmap = hm.heatmap(dPosArr,size=(frame_width, frame_height))
-		kHeatmap = hm.heatmap(kPosArr,size=(frame_width, frame_height))
+		if(count % 20 == 0):
+			dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
+			kHeatmap = hm.heatmap(kPosArr,scheme='pbj',size=(frame_width, frame_height))
 
-		dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
+			dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
+			kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
+			heatmapCombined = dHeatmap #+ kHeatmap
 		#cv2.imshow("h1",opencvImage)
 
 		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
@@ -262,7 +265,7 @@ def smash(stdscr):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
 		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
 
-		heatSuper = cv2.addWeighted(labelFrame, 0.7, dHeatmap, 0.3, 0)
+		heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
 		cv2.imshow("Video", heatSuper)
 		#cv2.imshow("Video", labelFrame)
 
@@ -279,7 +282,7 @@ def smash(stdscr):
 		key = cv2.waitKey(1) & 0xFF
 		if key == ord("q"):
 			break
-			
+
 		if(stdscr != None):
 			drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance)
 			k = stdscr.getch()
