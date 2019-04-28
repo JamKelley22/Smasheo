@@ -65,6 +65,10 @@ def withinPercentage(num1, num2, percent):
     return False
 
 def guessProspects(initStock, stockD, stockK, damageD, damageK):
+    if stockD == 0:
+        return 100, 0
+    if stockK == 0:
+        return 0, 100
     dedeChance = 50
     kirbyChance = 50
     if stockD < stockK:
@@ -81,4 +85,4 @@ def guessProspects(initStock, stockD, stockK, damageD, damageK):
         dedeChance += ((damageD - damageK)/5) / stockD
         kirbyChance -= ((damageD - damageK)/5) / stockD
 
-    return dedeChance, kirbyChance
+    return kirbyChance, dedeChance

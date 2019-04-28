@@ -14,7 +14,7 @@ import stockDetection
 import playerDetection as pd
 import stats
 
-def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame):
+def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count):
 	if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
 		time = upSmashes.pop(0)
 		if (hammerArea >= pd.UP_HAMM_AREA_MIN and dedeOnPlat):
@@ -69,7 +69,7 @@ def damageToInt(dam):
 	return num
 
 def main():
-	tracker = []
+	tracker = 0
 
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-v", "--video")
@@ -82,7 +82,7 @@ def main():
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 	#out = cv2.VideoWriter('outpy.avi',fourcc, fps, (frame_width,frame_height),1)
 
-	upSmashes = [50096, 649683]#ap.main()
+	upSmashes = [100000000, 1000000000]#ap.main()
 	width = int(vs.get(3))
 	height = int(vs.get(4))
 	pd.width = width
@@ -119,7 +119,7 @@ def main():
 			initStock = curStockD
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
-		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame)
+		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count)
 		#print stats.guessProspects(initStock, curStockD, curStockK, )
 		# for i in range(0, len(hammerAvg.getSet())):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
@@ -128,24 +128,22 @@ def main():
 
 		cv2.imshow("Video", labelFrame)
 
-		count += 1
 		#writer.write(labelFrame)
 		if (cv2.waitKey(25) & 0xFF == ord('q')):
 			break
 
-		# if (cv2.waitKey(25) & 0xFF == ord('t')):
-		# 	tracker.append("1")
-		# else:
-		# 	tracker.append("0")
+		if (cv2.waitKey(25) & 0xFF == ord('t')):
+			tracker += 1
 
-		#print tracker
+		if count > 1:
+			print (float(tracker)/count)*100
 		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
 
 		if key == ord("q"):
 			break
 
-	print np.sum(tracker), count
+		count += 1
 	vs.release()
 	#out.release()
 	cv2.destroyAllWindows()
