@@ -12,7 +12,7 @@ import Complex
 import fft
 import test
 import movingAvg as mv
-import audioProcessing as ap
+import audioProcessing as audP
 import stockDetection
 import playerDetection as pd
 import stats
@@ -43,15 +43,18 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 
 def trackObjects(frame, hammerAvg):
 	dedePos, dMask = pd.findDedede(frame)
-	kirbyPos = pd.findKirby(frame)
-	gordoPos = pd.findGordo(frame)
+	#kirbyPos = pd.findKirby(frame)
+	#gordoPos = pd.findGordo(frame)
+	#bsPos, bMask = pd.findRedShield(frame)
 	labelFrame = pd.drawLabel(frame, dedePos[4], dedePos[1], dedePos[0], (0, 0, 255))
-	labelFrame = pd.drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
+	#labelFrame = pd.drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
 	hammerPos = pd.findHammer(labelFrame)
 	labelFrame = pd.drawLabel(labelFrame, hammerPos[4], hammerPos[1], hammerPos[0], (0, 0, 255))
-	labelFrame = pd.drawLabel(labelFrame, gordoPos[4], gordoPos[1], gordoPos[0], (0, 0, 255))
+	#labelFrame = pd.drawLabel(labelFrame, gordoPos[4], gordoPos[1], gordoPos[0], (0, 0, 255))
+	#labelFrame = pd.drawLabel(labelFrame, bsPos[4], bsPos[1], bsPos[0], (0, 0, 255))
 	hammerAvg.insert((hammerPos[0], hammerPos[1]))
-	return labelFrame, dedePos, kirbyPos, hammerPos
+	#cv2.imshow("red shield", bMask)
+	return labelFrame, dedePos, [0], hammerPos
 
 def trackStock(curStockD, curStockK, labelFrame, count):
 	frmStockD = stockDetection.getDededeStock(labelFrame)
@@ -85,7 +88,7 @@ def main():
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 	#out = cv2.VideoWriter('outpy.avi',fourcc, fps, (frame_width,frame_height),1)
 
-	upSmashes = [100000000, 1000000000]#ap.main()
+	upSmashes = audP.main()
 	width = int(vs.get(3))
 	height = int(vs.get(4))
 	pd.width = width
@@ -116,7 +119,8 @@ def main():
 		dmgK = damageToInt(dmg[1])
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
-		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+		print "Dedede Stock:", curStockD, "Kirby Stock:", curStockK
+		#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
 			initStock = curStockD
@@ -135,11 +139,11 @@ def main():
 		if (cv2.waitKey(25) & 0xFF == ord('q')):
 			break
 
-		if (cv2.waitKey(25) & 0xFF == ord('t')):
-			tracker += 1
+		# if (cv2.waitKey(25) & 0xFF == ord('t')):
+		# 	tracker += 1
 
-		if count > 1:
-			print (float(tracker)/count)*100
+		# if count > 1:
+		# 	print (float(tracker)/count)*100
 		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
 

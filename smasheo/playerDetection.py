@@ -19,6 +19,14 @@ UP_HAMM_AREA_MIN = 200000
 width = 0
 height = 0
 
+def findCircles(mask, frm):
+    circles = cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1.2, 100)
+    if circles is not None:
+        for i in range(0, len(circles)):
+            print circles[i]
+            cv2.circle(frm, (circles[i][0], circles[i][1]), circles[i][2], (255, 0, 255), 2)
+            cv2.imshow("circle", frm)
+
 def drawLabel(frm, name, x, y, color):
     cv2.putText(frm, name,(y, x),cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
     return frm
@@ -34,6 +42,31 @@ def findTarget(bw, frm, name):
         #cv2.putText(frm, name,(biggest[0], biggest[1]),cv2.FONT_HERSHEY_SIMPLEX, 1, (255,100,100), 2, cv2.LINE_AA)
         return (biggest[0], biggest[1], biggest[2], biggest[3], name)
     return (0, 0, 0, 0, name)
+
+def findBlueShield(frm):
+    se = np.ones((5,5))
+    low = (220, 230, 255)
+    high = (255, 255, 255)
+    #hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(frm, low, high)
+    mask[0:150, 0:width] = 0
+    mask[600:height, 0:width] = 0
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
+    mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
+    return findTarget(mask, frm, "Blue Shield"), mask;
+
+def findRedShield(frm):
+    se = np.ones((2,2))
+    high = (255, 100, 100)
+    low = (170, 8, 40)
+    hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(frm, low, high)
+    mask[0:150, 0:width] = 0
+    mask[600:height, 0:width] = 0
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
+    mask = cv2.dilate(mask, np.ones((2,2)),iterations=8)
+    return findTarget(mask, frm, "Blue Shield"), mask;
+
 
 def findDK(frm):
     se = np.ones((6,6))
