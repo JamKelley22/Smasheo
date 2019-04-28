@@ -109,3 +109,21 @@ def whatsYourDamage(frame,frame_width,frame_height):
 	#cv2.imshow('isocolor',numpy_horizontal_concat_isocolor)
 
 	return out_nums
+
+def getYourLifeOverMine(frame,frame_width,frame_height):
+	frameL = frame[610:frame_height-55,335:frame_width-825]
+	frameR = frame[610:frame_height-55,830:frame_width-335]
+
+	cv2.imshow('frame', frameL)
+
+	hsvL = cv2.cvtColor(frameL, cv2.COLOR_BGR2HSV)
+	hsvR = cv2.cvtColor(frameR, cv2.COLOR_BGR2HSV)
+
+	grayL = cv2.cvtColor(frameL, cv2.COLOR_BGR2GRAY)
+	grayR = cv2.cvtColor(frameR, cv2.COLOR_BGR2GRAY)
+
+	retvalL, thresholdL = cv2.threshold(grayL, threshold_val, 255, cv2.THRESH_BINARY)
+	retvalR, thresholdR = cv2.threshold(grayR, threshold_val, 255, cv2.THRESH_BINARY)
+
+	thresholdL = cv2.morphologyEx(thresholdL, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))
+	thresholdR = cv2.morphologyEx(thresholdR, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))

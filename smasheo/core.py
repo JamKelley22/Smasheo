@@ -3,6 +3,9 @@ import numpy as np
 import imutils
 import argparse
 from collections import deque
+import Tkinter as tk
+import threading
+import playerInfo
 import damage
 import sys
 import Complex
@@ -149,3 +152,39 @@ def main():
 	cv2.destroyAllWindows()
 
 main()
+
+'''
+def run():
+	def callback():
+		while True:
+			frame = vs.read()
+			frame = frame[1]
+			if frame is None:
+				break
+
+
+
+			#print(playerInfo.whatsYourDamage(frame,frame_width,frame_height))
+			#playerInfo.getYourLifeOverMine(frame,frame_width,frame_height)
+
+			#out.write(frame)
+			key = cv2.waitKey(1) & 0xFF
+
+			if key == ord("q"):
+				break
+
+		vs.release()
+		#out.release()
+		cv2.destroyAllWindows()
+	t = threading.Thread(target=callback)
+	t.start()
+	return t;
+
+
+r = tk.Tk()
+r.title('Smasheo')
+
+button = tk.Button(r, text='Run', width=25, command= run())
+button.pack()
+r.mainloop()
+'''
