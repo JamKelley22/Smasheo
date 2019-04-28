@@ -81,6 +81,18 @@ def findHammer(frm):
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "Hammer");
 
+def findGordo(frm):
+    se = np.ones((6,6))
+    low = (25, 37, 30)
+    high = (54, 43, 66)
+    hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, low, high)
+    mask[0:150, 0:width] = 0
+    mask[600:height, 0:width] = 0
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
+    mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
+    return findTarget(mask, frm, "Gordo");
+
 def findPlatforms(frm):
     se = np.ones((6,6))
     low = (26, 30, 40)
@@ -150,10 +162,12 @@ for i in range(len(clips)):
             dummy, bw = cv2.threshold(bw, 100, 255, cv2.THRESH_BINARY)
             dedePos, dMask = findDedede(frm)
             kirbyPos = findKirby(frm)
+            gordoPos = findGordo(frm)
             labelFrame = drawLabel(frm, dedePos[4], dedePos[1], dedePos[0], (0, 0, 255))
             labelFrame = drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
             hammerPos = findHammer(labelFrame)
             labelFrame = drawLabel(labelFrame, hammerPos[4], hammerPos[1], hammerPos[0], (0, 0, 255))
+            labelFrame = drawLabel(labelFrame, gordoPos[4], gordoPos[1], gordoPos[0], (0, 0, 255))
             hammerAvg.insert((hammerPos[0], hammerPos[1]))
             displacement = hammerAvg.getDisplacement()
             dX = displacement[0]
