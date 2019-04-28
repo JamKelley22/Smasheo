@@ -14,8 +14,10 @@ BIG_PLAT = [196, 1080, 560, 600]
 S_L_PLAT = [305, 505, 430, 485]
 S_M_PLAT = [540, 740, 303, 359]
 S_R_PLAT = [770, 970, 430, 485]
-
 UP_HAMM_AREA_MIN = 200000
+
+width = 0
+height = 0
 
 def drawLabel(frm, name, x, y, color):
     cv2.putText(frm, name,(y, x),cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
