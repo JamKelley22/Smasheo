@@ -78,6 +78,9 @@ def main():
 	ap.add_argument("-v", "--video")
 	args = vars(ap.parse_args())
 
+	if(args["video"] == None):
+		sys.exit("Must specify video file with -v option")
+
 	vs = cv2.VideoCapture(args["video"])
 	frame_width = int(vs.get(3))
 	frame_height = int(vs.get(4))
