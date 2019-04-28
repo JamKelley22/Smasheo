@@ -256,11 +256,7 @@ def smash(stdscr):
 		dmgK = damageToInt(dmg[1])
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
-<<<<<<< HEAD
-		print "Dedede Stock:", curStockD, "Kirby Stock:", curStockK
-=======
->>>>>>> 6a43c3815f2e1f60720c54f9f3f836560ed5a99b
-		#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
 			initStock = curStockD
