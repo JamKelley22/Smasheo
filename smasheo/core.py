@@ -22,7 +22,7 @@ import stockDetection
 import playerDetection as pd
 import stats
 
-def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame):
+def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count):
 	if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
 		time = upSmashes.pop(0)
 		if (hammerArea >= pd.UP_HAMM_AREA_MIN and dedeOnPlat):
@@ -183,7 +183,7 @@ def smash(stdscr):
 		curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
 		stdscr.nodelay(1)#getch is non-blocking
 
-	tracker = []
+	tracker = 0
 
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-v", "--video")
@@ -199,7 +199,7 @@ def smash(stdscr):
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 	#out = cv2.VideoWriter('outpy.avi',fourcc, fps, (frame_width,frame_height),1)
 
-	upSmashes = [50096, 649683]#ap.main()
+	upSmashes = [100000000, 1000000000]#ap.main()
 	width = int(vs.get(3))
 	height = int(vs.get(4))
 	pd.width = width
@@ -256,7 +256,7 @@ def smash(stdscr):
 			initStock = curStockD
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
-		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame)
+		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count)
 		#print stats.guessProspects(initStock, curStockD, curStockK, )
 		# for i in range(0, len(hammerAvg.getSet())):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
@@ -264,14 +264,27 @@ def smash(stdscr):
 
 		heatSuper = cv2.addWeighted(labelFrame, 0.7, dHeatmap, 0.3, 0)
 		cv2.imshow("Video", heatSuper)
-		count += 1
+		#cv2.imshow("Video", labelFrame)
+
+		#writer.write(labelFrame)
+		if (cv2.waitKey(25) & 0xFF == ord('q')):
+			break
+
+		if (cv2.waitKey(25) & 0xFF == ord('t')):
+			tracker += 1
+
+		if count > 1:
+			print (float(tracker)/count)*100
+		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
 		if key == ord("q"):
 			break
-
+			
 		if(stdscr != None):
 			drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance)
 			k = stdscr.getch()
+
+		count += 1
 
 	print np.sum(tracker), count
 	vs.release()
