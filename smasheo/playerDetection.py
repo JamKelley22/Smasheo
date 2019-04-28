@@ -6,6 +6,7 @@ import fft
 import test
 import movingAvg as mv
 import audioProcessing as ap
+import stockDetection
 
 dedePos = [];
 #plat template: [x1, x2, y]
@@ -111,7 +112,7 @@ def onPlatform(stats):
     height = stats[3]
     endX = x + len
     endY = y + height
-    print endY
+    #print endY
     if x >= BIG_PLAT[0] and endX <= BIG_PLAT[1] and endY >= BIG_PLAT[2] and endY <= BIG_PLAT[3]:
         return True
     if x >= S_L_PLAT[0] and endX <= S_L_PLAT[1] and endY >= S_L_PLAT[2] and endY <= S_L_PLAT[3]:
@@ -122,9 +123,9 @@ def onPlatform(stats):
         return True
     return False
 
-clips = ['../replays/replay5.mp4']
+clips = ['../replays/replay4.mp4']
 for i in range(len(clips)):
-    upSmashes = ap.main()
+    upSmashes = [50096, 649683]#ap.main()
     vid = cv2.VideoCapture(clips[i])
     width = int(vid.get(3))
     height = int(vid.get(4))
@@ -138,6 +139,8 @@ for i in range(len(clips)):
     hammerAvg = mv.MovingAvg(0, 10)
                 #ID, time, timeout
     movesOnHold = []
+    curStockD = 0
+    curStockK = 0
     while(vid.isOpened()):
         val, frm = vid.read()
         if val == True:
@@ -155,19 +158,27 @@ for i in range(len(clips)):
             displacement = hammerAvg.getDisplacement()
             dX = displacement[0]
             dY = displacement[1]
+
+            frmStockD = stockDetection.getDededeStock(labelFrame)
+            frmStockK = stockDetection.getKirbyStock(labelFrame)
+            if (frmStockD != -1 and frmStockD <= curStockD) or count == 0:
+                curStockD = frmStockD
+            if (frmStockK != -1 and frmStockK <= curStockK) or count == 0:
+                curStockK = frmStockK
+            print curStockD, curStockK
             hammerArea = hammerAvg.area()
             for i in range(0, len(hammerAvg.getSet())):
                 drawPoint(labelFrame, hammerAvg.getSet()[i])
             #dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
 
             dedeOnPlat = onPlatform(dedePos)
-            print movesOnHold, hammerArea, dedeOnPlat
+            #print movesOnHold, hammerArea, dedeOnPlat
             if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
                 time = upSmashes.pop(0)
                 if (hammerArea >= UP_HAMM_AREA_MIN and dedeOnPlat):
                     doDrawAttack = True
                     attackFrame = count
-                    print timeStamp, upSmashes[0]
+                    #print timeStamp, upSmashes[0]
                 else:
                     movesOnHold.append([0, time, count + 10])
             if (doDrawAttack):
