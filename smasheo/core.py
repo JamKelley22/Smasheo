@@ -1,3 +1,4 @@
+import sys,os
 import cv2
 import numpy as np
 import imutils
@@ -5,6 +6,10 @@ import argparse
 from collections import deque
 import Tkinter as tk
 import threading
+import curses
+import heatmap
+import logging
+
 import playerInfo
 import damage
 import sys
@@ -74,12 +79,121 @@ def damageToInt(dam):
 		incr *= 10
 	return num
 
-def main():
+def drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance):
+	# Initialization
+	stdscr.clear()
+	height, width = stdscr.getmaxyx()
+
+	if k == curses.KEY_DOWN:
+		cursor_y = cursor_y + 1
+	elif k == curses.KEY_UP:
+		cursor_y = cursor_y - 1
+	elif k == curses.KEY_RIGHT:
+		cursor_x = cursor_x + 1
+	elif k == curses.KEY_LEFT:
+		cursor_x = cursor_x - 1
+
+	cursor_x = max(0, cursor_x)
+	cursor_x = min(width-1, cursor_x)
+
+	cursor_y = max(0, cursor_y)
+	cursor_y = min(height-1, cursor_y)
+
+	# Declaration of strings
+	title = "Smasheo"
+	subtitle = "Smash Ultmate Video Analizer"[:width-1]
+	keystr = "Last key pressed: {}".format(k)[:width-1]
+	statusbarstr = "Press 'q' to exit | STATUS BAR | Pos: {}, {}".format(cursor_x, cursor_y)
+	if k == 0:
+		keystr = "No key press detected..."[:width-1]
+	#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+	dmgK_s = "Damage: {}%".format(str(dmgK).ljust(3))
+	dmgD_s = "Damage: {}%".format(str(dmgD).ljust(3))
+	currStockD_s = "Stock: {}".format(curStockD)
+	currStockK_s = "Stock: {}".format(curStockK)
+	dChance_s = "Chance: {}%".format(dChance)
+	kChance_s = "Chance: {}%".format(kChance)
+
+	# Centering calculations
+	start_x_title = int((width // 2) - (len(title) // 2) - len(title) % 2)
+	start_x_subtitle = int((width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
+	start_x_keystr = int((width // 2) - (len(keystr) // 2) - len(keystr) % 2)
+	start_y = int((height // 2) - 2)
+
+	start_x_left = int((width // 3) - (len(dmgD_s) // 2) - len(dmgD_s) % 2)
+	start_x_right = (width - int((width // 3)) - (len(dmgD_s) // 2) - len(dmgD_s) % 2)
+
+	# Rendering some text
+	#whstr = "Width: {}, Height: {}".format(width, height)
+	#stdscr.addstr(0, 0, whstr, curses.color_pair(1))
+
+	# Render status bar
+	stdscr.attron(curses.color_pair(3))
+	stdscr.addstr(height-1, 0, statusbarstr)
+	stdscr.addstr(height-1, len(statusbarstr), " " * (width - len(statusbarstr) - 1))
+	stdscr.attroff(curses.color_pair(3))
+
+	# Turning on attributes for title
+	stdscr.attron(curses.color_pair(2))
+	stdscr.attron(curses.A_BOLD)
+
+	# Rendering title
+	stdscr.addstr(0, start_x_title, title)
+
+	# Turning off attributes for title
+	stdscr.attroff(curses.color_pair(2))
+	stdscr.attroff(curses.A_BOLD)
+
+	# Print rest of text
+	#stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
+	#stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
+	#stdscr.addstr(start_y + 5, start_x_keystr, keystr)
+	#left
+	stdscr.attron(curses.color_pair(1))
+	stdscr.addstr(start_y, start_x_left, "Donkey Kong")
+	stdscr.attroff(curses.color_pair(1))
+	stdscr.addstr(start_y+1, start_x_left, dmgK_s)
+	stdscr.addstr(start_y+2, start_x_left, currStockK_s)
+	stdscr.addstr(start_y+3, start_x_left, kChance_s)
+
+	#Right
+	stdscr.attron(curses.color_pair(1))
+	stdscr.addstr(start_y, start_x_right, "King Dedede ")
+	stdscr.attroff(curses.color_pair(1))
+	stdscr.addstr(start_y+1, start_x_right, dmgD_s)
+	stdscr.addstr(start_y+2, start_x_right, currStockD_s)
+	stdscr.addstr(start_y+3, start_x_right, dChance_s)
+
+	stdscr.move(cursor_y, cursor_x)
+
+	# Refresh the screen
+	stdscr.refresh()
+
+def smash(stdscr):
+	k = 0
+	if(stdscr != None):
+		cursor_x = 0
+		cursor_y = 0
+
+	    # Clear and refresh the screen for a blank canvas
+		stdscr.clear()
+		stdscr.refresh()
+
+	    # Start colors in curses
+		curses.start_color()
+		curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+		curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+		curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+		stdscr.nodelay(1)#getch is non-blocking
+
 	tracker = 0
 
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-v", "--video")
 	args = vars(ap.parse_args())
+
+	if(args["video"] == None):
+		sys.exit("Must specify video file with -v option")
 
 	vs = cv2.VideoCapture(args["video"])
 	frame_width = int(vs.get(3))
@@ -103,23 +217,49 @@ def main():
 	curStockD = 0
 	curStockK = 0
 	initStock = 0
-	while True:
+
+	initFrame = None
+	kPosArr = []
+	dPosArr = []
+	hm = heatmap.Heatmap()
+
+    # Loop where k is the last character pressed
+	while (k != ord('q')):
+
 		frame = vs.read()
 		frame = frame[1]
 		if frame is None:
 			break
 
-		cv2.waitKey(17)
+		if count == 0:
+			initFrame = frame
+
+		cv2.waitKey(1)#17
 		timeStamp = count * 16.6667
 
 		labelFrame, dedePos, hammerPos, kirbyPos = trackObjects(frame, hammerAvg)
+
+		kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
+		dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
+
+		if(count % 20 == 0):
+			dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
+			kHeatmap = hm.heatmap(kPosArr,scheme='pbj',size=(frame_width, frame_height))
+
+			dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
+			kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
+			heatmapCombined = dHeatmap #+ kHeatmap
+		#cv2.imshow("h1",opencvImage)
 
 		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
 		dmgD = damageToInt(dmg[0])
 		dmgK = damageToInt(dmg[1])
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
+<<<<<<< HEAD
 		print "Dedede Stock:", curStockD, "Kirby Stock:", curStockK
+=======
+>>>>>>> 6a43c3815f2e1f60720c54f9f3f836560ed5a99b
 		#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
@@ -132,8 +272,9 @@ def main():
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
 		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
 
-
-		cv2.imshow("Video", labelFrame)
+		heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
+		cv2.imshow("Video", heatSuper)
+		#cv2.imshow("Video", labelFrame)
 
 		#writer.write(labelFrame)
 		if (cv2.waitKey(25) & 0xFF == ord('q')):
@@ -146,12 +287,38 @@ def main():
 		# 	print (float(tracker)/count)*100
 		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
-
 		if key == ord("q"):
 			break
 
+		if(stdscr != None):
+			drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance)
+			k = stdscr.getch()
+
 		count += 1
+
+	print np.sum(tracker), count
 	vs.release()
+
+def initLogger():
+	logger = logging.getLogger(__file__)
+	hdlr = logging.FileHandler(__file__ + ".log")
+	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+	hdlr.setFormatter(formatter)
+	logger.addHandler(hdlr)
+	logger.setLevel(logging.DEBUG)
+	#logger.info("begin")
+	return logger
+
+def main():
+	dev = True
+	global logger
+	logger = initLogger()
+
+	if(not dev):
+		SCREEN = curses.initscr()
+		smash(SCREEN)
+	else:
+		smash(None)
 	#out.release()
 	cv2.destroyAllWindows()
 

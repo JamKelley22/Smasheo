@@ -71,6 +71,17 @@ def guessProspects(initStock, stockD, stockK, damageD, damageK):
         return 0, 100
     dedeChance = 50
     kirbyChance = 50
+
+    if stockD == 0:
+        dedeChance = 0
+        kirbyChance = 100
+        return dedeChance, kirbyChance
+
+    if stockK == 0:
+        dedeChance = 100
+        kirbyChance = 0
+        return dedeChance, kirbyChance
+
     if stockD < stockK:
         dedeChance -= (stockD - stockK) * 25
         kirbyChance += (stockD - stockK) * 25
