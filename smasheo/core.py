@@ -145,12 +145,12 @@ def drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kC
 	stdscr.attroff(curses.A_BOLD)
 
 	# Print rest of text
-	#stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
+	stdscr.addstr(1, start_x_subtitle, subtitle)
 	#stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
 	#stdscr.addstr(start_y + 5, start_x_keystr, keystr)
 	#left
 	stdscr.attron(curses.color_pair(1))
-	stdscr.addstr(start_y, start_x_left, "Donkey Kong")
+	stdscr.addstr(start_y, start_x_left, "Kirby")
 	stdscr.attroff(curses.color_pair(1))
 	stdscr.addstr(start_y+1, start_x_left, dmgK_s)
 	stdscr.addstr(start_y+2, start_x_left, currStockK_s)
@@ -158,7 +158,7 @@ def drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kC
 
 	#Right
 	stdscr.attron(curses.color_pair(1))
-	stdscr.addstr(start_y, start_x_right, "King Dedede ")
+	stdscr.addstr(start_y, start_x_right, "King Dedede")
 	stdscr.attroff(curses.color_pair(1))
 	stdscr.addstr(start_y+1, start_x_right, dmgD_s)
 	stdscr.addstr(start_y+2, start_x_right, currStockD_s)
@@ -306,7 +306,7 @@ def initLogger():
 	return logger
 
 def main():
-	dev = True
+	dev = False
 	global logger
 	logger = initLogger()
 
