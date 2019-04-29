@@ -57,8 +57,8 @@ def findBlueShield(frm):
 
 def findRedShield(frm):
     se = np.ones((2,2))
-    high = (255, 100, 100)
-    low = (170, 8, 40)
+    low = (170, 50, 50)
+    high = (255, 200, 250)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(frm, low, high)
     mask[0:150, 0:width] = 0
@@ -95,7 +95,7 @@ def findDedede(frm):
 def findKirby(frm):
     se = np.ones((6,6))
     low = (126, 84, 91)
-    high = (255, 167, 200)
+    high = (255, 177, 210)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, low, high)
     mask[0:150, 0:width] = 0

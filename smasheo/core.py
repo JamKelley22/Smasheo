@@ -52,11 +52,11 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 
 def trackObjects(frame, hammerAvg):
 	dedePos, dMask = pd.findDedede(frame)
-	#kirbyPos = pd.findKirby(frame)
+	kirbyPos = pd.findKirby(frame)
 	#gordoPos = pd.findGordo(frame)
 	#bsPos, bMask = pd.findRedShield(frame)
 	labelFrame = pd.drawLabel(frame, dedePos[4], dedePos[1], dedePos[0], (0, 0, 255))
-	#labelFrame = pd.drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
+	labelFrame = pd.drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
 	hammerPos = pd.findHammer(labelFrame)
 	labelFrame = pd.drawLabel(labelFrame, hammerPos[4], hammerPos[1], hammerPos[0], (0, 0, 255))
 	#labelFrame = pd.drawLabel(labelFrame, gordoPos[4], gordoPos[1], gordoPos[0], (0, 0, 255))
@@ -206,7 +206,7 @@ def smash(stdscr):
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 	#out = cv2.VideoWriter('outpy.avi',fourcc, fps, (frame_width,frame_height),1)
 
-	upSmashes = audP.main()
+	upSmashes = [4386749362,238792366]#audP.main()
 	width = int(vs.get(3))
 	height = int(vs.get(4))
 	pd.width = width
