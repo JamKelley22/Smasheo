@@ -60,6 +60,8 @@ def crossCorrelate(signal1, signal2, delay):
     return rReal, rImag
 
 def withinPercentage(num1, num2, percent):
+    if num2 == 0:
+        return 0
     if np.abs(num1 / num2) <= (1-percent):
         return True
     return False

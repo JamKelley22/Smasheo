@@ -148,7 +148,7 @@ def correlateMatches(mat1, mat2, duration, timeVec, matches, FFTSize):
 #     return output, nTimeList
 
 
-def getAllMatches2(mat1, mat2, timeList, FFTSize):
+def compareIntensities(mat1, mat2, timeList, FFTSize):
     matReconstructed = []
     mat2Mag = []
     output = []
@@ -171,42 +171,46 @@ def getAllMatches2(mat1, mat2, timeList, FFTSize):
                     atLeastCount += 50
                 if np.abs(mat2I - mat1I) <= 0.75 and mat2I > 15 and mat1I > 20:
                     atLeastCount += 10
-        if (atLeastCount >= 100000):
+        if (atLeastCount >= 160000):
             output.append(i)
             nTimeList.append(timeList[i])
             print timeList[i], i, atLeastCount
         atLeastCount = 0
     return output, nTimeList
 
-def compareIntensities(mat1, mat2, duration, FFTSize):
-        matReconstructed = []
-        mat2Mag = []
-        output = []
-        nTimeList = []
-        atLeastCount = 0
-        if len(mat1[0]) != len(mat2[0]):
-            print "Bin mismatch"
-            return
-        mat2FreqIndex = 0
-        for i in range(0, len(mat1)):
-            for j in range(0, len(mat2)):
-                for k in range(0, NUM_BINS):
-                    mat1I = fft.getIntensity(mat1[i][k], k)
-                    mat1I = fft.getIntensity(mat1[j][k], k)
-                    if np.abs(mat1I - mat2I) <= 10:
-                        atLeastCount += 1
-            if (atLeastCount >= 7000):
-                output.append(i)
-                nTimeList.append(timeList[i])
-                print "I", timeList[i], i, atLeastCount
-        return output, nTimeList
+# def compareIntensities(mat1, mat2, duration, FFTSize):
+#         matReconstructed = []
+#         mat2Mag = []
+#         output = []
+#         nTimeList = []
+#         atLeastCount = 0
+#         if len(mat1[0]) != len(mat2[0]):
+#             print "Bin mismatch"
+#             return
+#         mat2FreqIndex = 0
+#         for i in range(0, len(mat1)):
+#             for j in range(0, len(mat2)):
+#                 for k in range(0, NUM_BINS):
+#                     mat1I = fft.getIntensity(mat1[i][k], k)
+#                     mat1I = fft.getIntensity(mat1[j][k], k)
+#                     if np.abs(mat1I - mat2I) <= 10:
+#                         atLeastCount += 1
+#             if (atLeastCount >= 7000):
+#                 output.append(i)
+#                 nTimeList.append(timeList[i])
+#                 print "I", timeList[i], i, atLeastCount
+#         return output, nTimeList
 
 def removeSimilarTimes(matches, nTimes):
     outputMatches = [matches[0]]
     outputnTimes = [nTimes[0]]
+    outputMatches.append(matches[0])
+    outputnTimes.append(nTimes[0])
     for i in range(0, len(nTimes)):
-        if stats.withinPercentage(nTimes[i-1], nTimes[i]):
-            outputMatches.append()
+        if stats.withinPercentage(nTimes[i-1], nTimes[i], 0.1) == False:
+            outputMatches.append(matches[i])
+            outputnTimes.append(nTimes[i])
+    return outputMatches, outputnTimes
 
 def getAudioDuration(directory):
     audio = wave.open(directory, 'r')
@@ -218,10 +222,10 @@ def getAudioDuration(directory):
 
 def main():
     fftSize = 256
-    duration = getAudioDuration("../Audio/games/audio5.wav")
-    mat2 = getFFTMatrix("./dededehit.wav", "../Audio/King Dedede Sounds/dedeUpSmash2.wav", False, fftSize)
+    duration = getAudioDuration("../Audio/games/audio4.wav")
+    mat2 = getFFTMatrix("../Audio/King Dedede Sounds/dedeHammerSwing.wav", "../Audio/King Dedede Sounds/dedeHammerSwing.wav", False, fftSize)
     #print len(mat2)
-    mat1 = getFFTMatrix("../replays/replay5.mp4", "../Audio/games/audio5.wav", True, fftSize)
+    mat1 = getFFTMatrix("../replays/replay4.mp4", "../Audio/games/audio4.wav", True, fftSize)
     # #fft.matrixToCSV(mat1, "./replay1FFT256.csv")
     # for i in range (0, len(mat2)/2):
     #     for j in range(0, len(mat2)/2):
@@ -233,7 +237,8 @@ def main():
     #fft.matrixToCSV(mat2, "./dededeFFT512")
     timeList, refMat1 = correlateVectors(mat1, mat2, duration, fftSize)
     print "finished FFT"
-    matches,nTimes = getAllMatches2(refMat1, mat2, timeList, fftSize)
+    matches,nTimes = compareIntensities(refMat1, mat2, timeList, fftSize)
+    #matches,nTimes = removeSimilarTimes(matches, nTimes)
     print "finished searching"
     #matches, nTimes = compareIntensities()
 

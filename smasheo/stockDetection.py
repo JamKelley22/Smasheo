@@ -14,6 +14,7 @@ def getDededeStock(frm):
             stocks += 1
         else:
             return -1
+    cv2.imshow("Dedede stock", bw)
     return stocks
 
 def getKirbyStock(frm):
@@ -28,4 +29,5 @@ def getKirbyStock(frm):
             stocks += 1
         else:
             return -1
+    cv2.imshow("Kirby stock", bw)
     return stocks

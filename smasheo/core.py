@@ -7,7 +7,7 @@ from collections import deque
 import Tkinter as tk
 import threading
 import curses
-import heatmap
+#import heatmap
 import logging
 
 import playerInfo
@@ -22,7 +22,10 @@ import stockDetection
 import playerDetection as pd
 import stats
 
-def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count):
+#def checkWithinAcceptableLimit(avg, elem, movAvg):
+
+
+def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos):
 	if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
 		time = upSmashes.pop(0)
 		if (hammerArea >= pd.UP_HAMM_AREA_MIN and dedeOnPlat):
@@ -45,6 +48,7 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 			removeLater.append(movesOnHold[i])
 	for i in range(0, len(removeLater)):
 		movesOnHold.remove(removeLater[i])
+	return upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos
 
 def trackObjects(frame, hammerAvg):
 	dedePos, dMask = pd.findDedede(frame)
@@ -211,7 +215,7 @@ def smash(stdscr):
 	attackFrame = 0
 	doDrawAttack = False
 	hammerAvg = mv.MovingAvg(0, 10)
-	dedeAvg = mv.MovingAvg(0, 10)
+	dedeAvg = mv.MovingAvg(0, 5)
 	            #ID, time, timeout
 	movesOnHold = []
 	curStockD = 0
@@ -221,7 +225,7 @@ def smash(stdscr):
 	initFrame = None
 	kPosArr = []
 	dPosArr = []
-	hm = heatmap.Heatmap()
+	#hm = heatmap.Heatmap()
 
     # Loop where k is the last character pressed
 	while (k != ord('q')):
@@ -242,13 +246,13 @@ def smash(stdscr):
 		kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
 		dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
 
-		if(count % 20 == 0):
-			dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
-			kHeatmap = hm.heatmap(kPosArr,scheme='pbj',size=(frame_width, frame_height))
-
-			dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
-			kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
-			heatmapCombined = dHeatmap #+ kHeatmap
+		# if(count % 20 == 0):
+		# 	dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
+		# 	kHeatmap = hm.heatmap(kPosArr,scheme='pbj',size=(frame_width, frame_height))
+		#
+		# 	dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
+		# 	kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
+		# 	heatmapCombined = dHeatmap #+ kHeatmap
 		#cv2.imshow("h1",opencvImage)
 
 		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
@@ -262,29 +266,33 @@ def smash(stdscr):
 			initStock = curStockD
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
-		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count)
+		upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos = handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedeAvg)
+
+		if doDrawAttack:
+			pd.drawLabel(frame, "up smash", 500, 500, (255, 255, 0))
+
 		#print stats.guessProspects(initStock, curStockD, curStockK, )
 		# for i in range(0, len(hammerAvg.getSet())):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
 		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
 
-		heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
-		cv2.imshow("Video", heatSuper)
-		#cv2.imshow("Video", labelFrame)
+		#heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
+		#cv2.imshow("Video", heatSuper)
+		cv2.imshow("Video", labelFrame)
 
 		#writer.write(labelFrame)
-		if (cv2.waitKey(25) & 0xFF == ord('q')):
-			break
+		# if (cv2.waitKey(25) & 0xFF == ord('q')):
+		# 	break
 
-		# if (cv2.waitKey(25) & 0xFF == ord('t')):
-		# 	tracker += 1
+		if (cv2.waitKey(25) & 0xFF == ord('t')):
+			tracker += 1
 
-		# if count > 1:
-		# 	print (float(tracker)/count)*100
-		#out.write(frame)
-		key = cv2.waitKey(1) & 0xFF
-		if key == ord("q"):
-			break
+		if count > 1:
+			# 	print (float(tracker)/count)*100
+			#out.write(frame)
+			key = cv2.waitKey(1) & 0xFF
+			if key == ord("q"):
+				break
 
 		if(stdscr != None):
 			drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance)
@@ -306,7 +314,7 @@ def initLogger():
 	return logger
 
 def main():
-	dev = False
+	dev = True
 	global logger
 	logger = initLogger()
 
@@ -319,39 +327,3 @@ def main():
 	cv2.destroyAllWindows()
 
 main()
-
-'''
-def run():
-	def callback():
-		while True:
-			frame = vs.read()
-			frame = frame[1]
-			if frame is None:
-				break
-
-
-
-			#print(playerInfo.whatsYourDamage(frame,frame_width,frame_height))
-			#playerInfo.getYourLifeOverMine(frame,frame_width,frame_height)
-
-			#out.write(frame)
-			key = cv2.waitKey(1) & 0xFF
-
-			if key == ord("q"):
-				break
-
-		vs.release()
-		#out.release()
-		cv2.destroyAllWindows()
-	t = threading.Thread(target=callback)
-	t.start()
-	return t;
-
-
-r = tk.Tk()
-r.title('Smasheo')
-
-button = tk.Button(r, text='Run', width=25, command= run())
-button.pack()
-r.mainloop()
-'''
