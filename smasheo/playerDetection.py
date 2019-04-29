@@ -10,10 +10,10 @@ import stockDetection
 
 dedePos = [];
 #plat template: [x1, x2, y]
-BIG_PLAT = [196, 1080, 560, 600]
-S_L_PLAT = [305, 505, 430, 485]
-S_M_PLAT = [540, 740, 303, 359]
-S_R_PLAT = [770, 970, 430, 485]
+BIG_PLAT = [186, 1080, 555, 725]
+S_L_PLAT = [285, 505, 415, 455]
+S_M_PLAT = [520, 740, 286, 329]
+S_R_PLAT = [750, 970, 415, 455]
 UP_HAMM_AREA_MIN = 200000
 
 width = 0
@@ -28,6 +28,10 @@ def findCircles(mask, frm):
             cv2.imshow("circle", frm)
 
 def drawLabel(frm, name, x, y, color):
+    # cv2.rectangle(frm, (186, 555), (1080, 700), (255, 0, 0), 2)
+    # cv2.rectangle(frm, (285, 415), (505, 485), (255, 0, 0), 2)
+    # cv2.rectangle(frm, (520, 286), (740, 359), (255, 0, 0), 2)
+    # cv2.rectangle(frm, (750, 415), (970, 485), (255, 0, 0), 2)
     cv2.putText(frm, name,(y, x),cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
     return frm
 
@@ -49,8 +53,8 @@ def findBlueShield(frm):
     high = (255, 255, 255)
     #hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(frm, low, high)
-    mask[0:150, 0:width] = 0
-    mask[600:height, 0:width] = 0
+    #mask[0:150, 0:width] = 0
+    mask[580:height, 240:1000] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "Blue Shield"), mask;
@@ -61,8 +65,8 @@ def findRedShield(frm):
     high = (255, 200, 250)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(frm, low, high)
-    mask[0:150, 0:width] = 0
-    mask[600:height, 0:width] = 0
+    #mask[0:150, 0:width] = 0
+    mask[580:height, 240:1000] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((2,2)),iterations=8)
     return findTarget(mask, frm, "Blue Shield"), mask;
@@ -74,8 +78,8 @@ def findDK(frm):
     high = (189, 113, 235)
     #hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(frm, low, high)
-    mask[0:150, 0:width] = 0
-    mask[600:height, 0:width] = 0
+    #mask[0:150, 0:width] = 0
+    mask[580:height, 240:1000] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((10,10)),iterations=8)
     return findTarget(mask, frm, "Donkey Kong");
@@ -86,8 +90,8 @@ def findDedede(frm):
     high = (130, 200, 250)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, low, high)
-    mask[0:150, 0:width] = 0
-    mask[600:height, 0:width] = 0
+    # mask[0:150, 0:width] = 0
+    mask[580:height, 240:1000] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "King Dedede"), mask;
@@ -98,8 +102,8 @@ def findKirby(frm):
     high = (255, 177, 210)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, low, high)
-    mask[0:150, 0:width] = 0
-    mask[600:height, 0:width] = 0
+    #mask[0:150, 0:width] = 0
+    mask[580:height, 240:1000] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "Kirby");
@@ -110,8 +114,8 @@ def findHammer(frm):
     high = (92, 165, 204)
     hsv = cv2.cvtColor(frm, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, low, high)
-    mask[0:150, 0:width] = 0
-    mask[600:height, 0:width] = 0
+    # mask[0:150, 0:width] = 0
+    mask[580:height, 240:1000] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, se)
     mask = cv2.dilate(mask, np.ones((5,5)),iterations=8)
     return findTarget(mask, frm, "Hammer");
@@ -155,17 +159,17 @@ def drawPoint(frm, pos):
 def onPlatform(stats):
     x = stats[0]
     y = stats[1]
-    len = stats[2]
+    len = stats[2]/2 - 10
     height = stats[3]
     endX = x + len
     endY = y + height
     #print endY
-    if x >= BIG_PLAT[0] and endX <= BIG_PLAT[1] and endY >= BIG_PLAT[2] and endY <= BIG_PLAT[3]:
+    if x >= BIG_PLAT[0] and endX <= BIG_PLAT[1] and endY >= BIG_PLAT[2] and y <= BIG_PLAT[3]:
         return True
-    if x >= S_L_PLAT[0] and endX <= S_L_PLAT[1] and endY >= S_L_PLAT[2] and endY <= S_L_PLAT[3]:
+    if x >= S_L_PLAT[0] and endX <= S_L_PLAT[1] and endY >= S_L_PLAT[2] and y <= S_L_PLAT[3]:
         return True
-    if x >= S_M_PLAT[0] and endX <= S_M_PLAT[1] and endY >= S_M_PLAT[2] and endY <= S_M_PLAT[3]:
+    if x >= S_M_PLAT[0] and endX <= S_M_PLAT[1] and endY >= S_M_PLAT[2] and y <= S_M_PLAT[3]:
         return True
-    if x >= S_R_PLAT[0] and endX <= S_R_PLAT[1] and endY >= S_R_PLAT[2] and endY <= S_R_PLAT[3]:
+    if x >= S_R_PLAT[0] and endX <= S_R_PLAT[1] and endY >= S_R_PLAT[2] and y <= S_R_PLAT[3]:
         return True
     return False

@@ -24,6 +24,8 @@ import stats
 
 #def checkWithinAcceptableLimit(avg, elem, movAvg):
 
+def drawOutcome(frm, dedeChance, kirbyChance):
+	return
 
 def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos):
 	if (len(upSmashes) > 0 and timeStamp >= upSmashes[0]):
@@ -63,7 +65,7 @@ def trackObjects(frame, hammerAvg):
 	#labelFrame = pd.drawLabel(labelFrame, bsPos[4], bsPos[1], bsPos[0], (0, 0, 255))
 	hammerAvg.insert((hammerPos[0], hammerPos[1]))
 	#cv2.imshow("red shield", bMask)
-	return labelFrame, dedePos, [0], hammerPos
+	return labelFrame, dedePos, hammerPos, kirbyPos, dMask
 
 def trackStock(curStockD, curStockK, labelFrame, count):
 	frmStockD = stockDetection.getDededeStock(labelFrame)
@@ -222,6 +224,14 @@ def smash(stdscr):
 	curStockK = 0
 	initStock = 0
 
+	dededeAirTime = 0
+	kirbyAirTime = 0
+
+	dededeKOTime = []
+	kirbyKOTime = []
+	curDededeTime = 0
+	curKirbyTime = 0
+
 	initFrame = None
 	kPosArr = []
 	dPosArr = []
@@ -238,10 +248,9 @@ def smash(stdscr):
 		if count == 0:
 			initFrame = frame
 
-		cv2.waitKey(1)#17
 		timeStamp = count * 16.6667
 
-		labelFrame, dedePos, hammerPos, kirbyPos = trackObjects(frame, hammerAvg)
+		labelFrame, dedePos, hammerPos, kirbyPos, dMask = trackObjects(frame, hammerAvg)
 
 		kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
 		dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
@@ -258,18 +267,48 @@ def smash(stdscr):
 		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
 		dmgD = damageToInt(dmg[0])
 		dmgK = damageToInt(dmg[1])
+		prevStockD = curStockD
+		prevStockK = curStockK
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
+
+		if (prevStockD <= curStockD):
+			dif = 0
+			if (len(dededeKOTime) == 0):
+				dif = count
+			else:
+				dif = count - dededeKOTime[len(dededeKOTime) - 1]
+			dededeKOTime.append(dif)
+
+		if (prevStockK <= curStockK):
+			dif = 0
+			if (len(kirbyKOTime) == 0):
+				dif = count
+			else:
+				dif = count - kirbyKOTime[len(kirbyKOTime) - 1]
+			kirbyKOTime.append(dif)
+
+
+
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
-		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+		#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
 			initStock = curStockD
+
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
+		kirbyOnPlat = pd.onPlatform(kirbyPos)
 		upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos = handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedeAvg)
 
-		if doDrawAttack:
-			pd.drawLabel(frame, "up smash", 500, 500, (255, 255, 0))
+		if (dedeOnPlat == False):
+			dededeAirTime += 1
+		if (kirbyOnPlat == False):
+			kirbyAirTime += 1
+
+		dedeString = "King Dedede: Win Chance: " + str(dChance) + "% Air Time " + str(np.round(dededeAirTime * 16.677) / 1000) + "s Ground Attack?: " + str(doDrawAttack)
+		kirbyString = "Kirby: Win Chance: " + str(kChance) + "% Air Time " + str(np.round(kirbyAirTime * 16.677) / 1000) + "s Ground Attack?: N/A"
+		pd.drawLabel(frame, dedeString, 100, 10, (200, 200, 200))
+		pd.drawLabel(frame, kirbyString, 150, 10, (200, 200, 200))
 
 		#print stats.guessProspects(initStock, curStockD, curStockK, )
 		# for i in range(0, len(hammerAvg.getSet())):
@@ -279,10 +318,7 @@ def smash(stdscr):
 		#heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
 		#cv2.imshow("Video", heatSuper)
 		cv2.imshow("Video", labelFrame)
-
-		#writer.write(labelFrame)
-		# if (cv2.waitKey(25) & 0xFF == ord('q')):
-		# 	break
+		cv2.imshow("bw", dMask)
 
 		if (cv2.waitKey(25) & 0xFF == ord('t')):
 			tracker += 1

@@ -66,7 +66,7 @@ def withinPercentage(num1, num2, percent):
         return True
     return False
 
-def guessProspects(initStock, stockD, stockK, damageD, damageK):
+def guessProspects(initStock, stockD, stockK, avgStockTimeD, avgStockTimeK):
     if stockD == 0:
         return 100, 0
     if stockK == 0:
