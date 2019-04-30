@@ -11,7 +11,6 @@ import heatmap
 import logging
 
 import playerInfo
-import damage
 import sys
 import Complex
 import fft
@@ -197,7 +196,6 @@ def smash(stdscr):
 	frame_height = int(vs.get(4))
 	fps = int(vs.get(5))
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-	#out = cv2.VideoWriter('outpy.avi',fourcc, fps, (frame_width,frame_height),1)
 
 	upSmashes = [100000000, 1000000000]#ap.main()
 	width = int(vs.get(3))
@@ -220,6 +218,10 @@ def smash(stdscr):
 	dPosArr = []
 	hm = heatmap.Heatmap()
 
+	actionFrames = deque([])
+	lastDStock = 2
+	lastKStock = 2
+
     # Loop where k is the last character pressed
 	while (k != ord('q')):
 
@@ -231,13 +233,13 @@ def smash(stdscr):
 		if count == 0:
 			initFrame = frame
 
-		cv2.waitKey(1)#17
 		timeStamp = count * 16.6667
 
 		labelFrame, dedePos, hammerPos, kirbyPos = trackObjects(frame, hammerAvg)
 
-		kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
-		dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
+		if(count % 5 == 0):
+			kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
+			dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
 
 		if(count % 20 == 0):
 			dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
@@ -248,15 +250,18 @@ def smash(stdscr):
 			heatmapCombined = dHeatmap #+ kHeatmap
 		#cv2.imshow("h1",opencvImage)
 
-		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
+		dmg = playerInfo.whatsYourDamage(frame,frame_width,frame_height)
 		dmgD = damageToInt(dmg[0])
 		dmgK = damageToInt(dmg[1])
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
-		#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+
+		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
 			initStock = curStockD
+			lastDStock = curStockD
+			
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
 		handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count)
@@ -267,21 +272,24 @@ def smash(stdscr):
 
 		heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
 		cv2.imshow("Video", heatSuper)
-		#cv2.imshow("Video", labelFrame)
 
-		#writer.write(labelFrame)
-		if (cv2.waitKey(25) & 0xFF == ord('q')):
-			break
+		#==========Highlights====================
+		if curStockD != lastDStock or curStockK != lastKStock:
+			actionFrames.appendleft(count)
+			print("===================================================")
 
-		if (cv2.waitKey(25) & 0xFF == ord('t')):
-			tracker += 1
 
-		if count > 1:
-			print (float(tracker)/count)*100
+		lastDStock = curStockD
+		lastKStock = curStockK
+
+		#if count > 1:
+			#print (float(tracker)/count)*100
 		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
 		if key == ord("q"):
 			break
+		elif key == ord("t"):
+			tracker += 1
 
 		if(stdscr != None):
 			drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance)
@@ -290,6 +298,39 @@ def smash(stdscr):
 		count += 1
 
 	print np.sum(tracker), count
+
+	#==============Compile Highlights
+	out = cv2.VideoWriter('highlights.avi',fourcc, fps, (frame_width,frame_height),1)
+
+	vs_out = cv2.VideoCapture(args["video"])
+	count_out = 0
+	if actionFrames:
+		nextFrame = actionFrames.pop()
+	else:
+		vs_out.release()
+		vs.release()
+		sys.exit()
+	slice_thresh = 60#60 * 2 = 120 = 2 sec
+	print(actionFrames)
+	while(vs_out.isOpened()):
+		frame_out = vs_out.read()
+		frame_out = frame_out[1]
+		if abs(nextFrame - count_out < slice_thresh):
+			out.write(frame_out)
+			if actionFrames:
+				nextFrame = actionFrames.pop()
+			else:
+				break
+		if nextFrame <= count_out:
+			if actionFrames:
+				nextFrame = actionFrames.pop()
+			else:
+				break
+
+		count_out += 1
+		print(count_out)
+
+	vs_out.release()
 	vs.release()
 
 def initLogger():
@@ -303,7 +344,7 @@ def initLogger():
 	return logger
 
 def main():
-	dev = False
+	dev = True
 	global logger
 	logger = initLogger()
 
@@ -312,43 +353,6 @@ def main():
 		smash(SCREEN)
 	else:
 		smash(None)
-	#out.release()
 	cv2.destroyAllWindows()
 
 main()
-
-'''
-def run():
-	def callback():
-		while True:
-			frame = vs.read()
-			frame = frame[1]
-			if frame is None:
-				break
-
-
-
-			#print(playerInfo.whatsYourDamage(frame,frame_width,frame_height))
-			#playerInfo.getYourLifeOverMine(frame,frame_width,frame_height)
-
-			#out.write(frame)
-			key = cv2.waitKey(1) & 0xFF
-
-			if key == ord("q"):
-				break
-
-		vs.release()
-		#out.release()
-		cv2.destroyAllWindows()
-	t = threading.Thread(target=callback)
-	t.start()
-	return t;
-
-
-r = tk.Tk()
-r.title('Smasheo')
-
-button = tk.Button(r, text='Run', width=25, command= run())
-button.pack()
-r.mainloop()
-'''

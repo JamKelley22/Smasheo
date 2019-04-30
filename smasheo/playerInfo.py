@@ -95,10 +95,10 @@ def whatsYourDamage(frame,frame_width,frame_height):
 	rightNums = [-1,-1,-1]
 
 	#numpy_horizontal_concat = np.concatenate((openL, openR), axis=1)
-	numpy_horizontal_concat_norm = np.concatenate((frameL, frameR), axis=1)
+	#numpy_horizontal_concat_norm = np.concatenate((frameL, frameR), axis=1)
 	#numpy_horizontal_concat_thresh = np.concatenate((thresholdL, thresholdR), axis=1)
 	#numpy_horizontal_concat_hsv = np.concatenate((hsvL, hsvR), axis=1)
-	#numpy_horizontal_concat_isocolor = np.concatenate((redsL, redsR), axis=1)
+	#numpy_horizontal_concat_isocolor = np.concatenate((maskL, maskR), axis=1)
 	#numpy_horizontal_concat_erode = np.concatenate((eL, eR), axis=1)
 
 	#cv2.imshow('res',numpy_horizontal_concat)
