@@ -9,6 +9,10 @@ import threading
 import curses
 #import heatmap
 import logging
+try:
+	import heatmap
+except ImportError:
+    print("Cannot import heatmap")
 
 import playerInfo
 import sys
@@ -174,7 +178,7 @@ def drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kC
 	# Refresh the screen
 	stdscr.refresh()
 
-def smash(stdscr):
+def smash(stdscr,brian):
 	k = 0
 	if(stdscr != None):
 		cursor_x = 0
@@ -233,7 +237,8 @@ def smash(stdscr):
 	initFrame = None
 	kPosArr = []
 	dPosArr = []
-	#hm = heatmap.Heatmap()
+	if (not brian):
+		hm = heatmap.Heatmap()
 
 	actionFrames = deque([])
 	lastDStock = 2
@@ -258,13 +263,14 @@ def smash(stdscr):
 			kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
 			dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
 
-		# if(count % 20 == 0):
-		# 	dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
-		# 	kHeatmap = hm.heatmap(kPosArr,scheme='pbj',size=(frame_width, frame_height))
-		#
-		# 	dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
-		# 	kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
-		# 	heatmapCombined = dHeatmap #+ kHeatmap
+		if(not brian):
+			if(count % 20 == 0):
+				dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
+				kHeatmap = hm.heatmap(kPosArr,scheme='pbj',size=(frame_width, frame_height))
+
+				dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
+				kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
+				heatmapCombined = dHeatmap #+ kHeatmap
 		#cv2.imshow("h1",opencvImage)
 
 		dmg = playerInfo.whatsYourDamage(frame,frame_width,frame_height)
@@ -281,6 +287,8 @@ def smash(stdscr):
 			else:
 				dif = count - dededeKOTime[len(dededeKOTime) - 1]
 			dededeKOTime.append(dif)
+			if count > 10:
+				actionFrames.appendleft(count)
 
 		if (prevStockK <= curStockK):
 			dif = 0
@@ -289,6 +297,8 @@ def smash(stdscr):
 			else:
 				dif = count - kirbyKOTime[len(kirbyKOTime) - 1]
 			kirbyKOTime.append(dif)
+			if count > 10:
+				actionFrames.appendleft(count)
 
 
 
@@ -304,7 +314,7 @@ def smash(stdscr):
 		dedeOnPlat = pd.onPlatform(dedePos)
 		kirbyOnPlat = pd.onPlatform(kirbyPos)
 		upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos = handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedeAvg)
-
+		#print(timeStamp)
 		if (dedeOnPlat == False):
 			dededeAirTime += 1
 		if (kirbyOnPlat == False):
@@ -319,14 +329,11 @@ def smash(stdscr):
 		# for i in range(0, len(hammerAvg.getSet())):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
 		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
-
-		heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
-		cv2.imshow("Video", heatSuper)
-
-		#==========Highlights====================
-		if curStockD != lastDStock or curStockK != lastKStock:
-			actionFrames.appendleft(count)
-			print("===================================================")
+		if(not brian):
+			heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
+			cv2.imshow("Video", heatSuper)
+		else:
+			cv2.imshow("Video", labelFrame)
 
 		#cv2.imshow("Video", labelFrame)
 		#cv2.imshow("bw", dMask)
@@ -363,7 +370,9 @@ def smash(stdscr):
 		vs_out.release()
 		vs.release()
 		sys.exit()
-	slice_thresh = 60#60 * 2 = 120 = 2 sec
+
+	slice_thresh = 30
+	print("Action Frames")
 	print(actionFrames)
 	while(vs_out.isOpened()):
 		frame_out = vs_out.read()
@@ -398,14 +407,15 @@ def initLogger():
 
 def main():
 	dev = True
+	brian = False #Set this insted of commenting heatmap
 	global logger
 	logger = initLogger()
 
 	if(not dev):
 		SCREEN = curses.initscr()
-		smash(SCREEN)
+		smash(SCREEN,brian)
 	else:
-		smash(None)
+		smash(None,brian)
 	cv2.destroyAllWindows()
 
 main()
