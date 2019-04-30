@@ -32,7 +32,7 @@ def drawLabel(frm, name, x, y, color):
     # cv2.rectangle(frm, (285, 415), (505, 485), (255, 0, 0), 2)
     # cv2.rectangle(frm, (520, 286), (740, 359), (255, 0, 0), 2)
     # cv2.rectangle(frm, (750, 415), (970, 485), (255, 0, 0), 2)
-    cv2.putText(frm, name,(y, x),cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+    cv2.putText(frm, name,(y, x),cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 1, cv2.LINE_AA)
     return frm
 
 def findTarget(bw, frm, name):

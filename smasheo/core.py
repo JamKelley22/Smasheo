@@ -70,8 +70,8 @@ def trackObjects(frame, hammerAvg):
 	return labelFrame, dedePos, hammerPos, kirbyPos, dMask
 
 def trackStock(curStockD, curStockK, labelFrame, count):
-	frmStockD = stockDetection.getDededeStock(labelFrame)
-	frmStockK = stockDetection.getKirbyStock(labelFrame)
+	frmStockD = stockDetection.getDededeStock(labelFrame, curStockD)
+	frmStockK = stockDetection.getKirbyStock(labelFrame, curStockK)
 	if (frmStockD != -1 and frmStockD <= curStockD) or count == 0:
 		curStockD = frmStockD
 	if (frmStockK != -1 and frmStockK <= curStockK) or count == 0:
@@ -240,8 +240,8 @@ def smash(stdscr,brian):
 		hm = heatmap.Heatmap()
 
 	actionFrames = deque([])
-	lastDStock = 2
-	lastKStock = 2
+	lastDStock = 0
+	lastKStock = 0
 
     # Loop where k is the last character pressed
 	while (k != ord('q')):
@@ -285,7 +285,7 @@ def smash(stdscr,brian):
 				dif = count
 			else:
 				dif = count - dededeKOTime[len(dededeKOTime) - 1]
-			dededeKOTime.append(dif)
+			#dededeKOTime.append(dif)
 			if count > 10:
 				actionFrames.appendleft(count)
 
@@ -295,10 +295,11 @@ def smash(stdscr,brian):
 				dif = count
 			else:
 				dif = count - kirbyKOTime[len(kirbyKOTime) - 1]
-			kirbyKOTime.append(dif)
+			#kirbyKOTime.append(dif)
 			if count > 10:
 				actionFrames.appendleft(count)
 
+		#print dededeKOTime
 
 
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
@@ -321,8 +322,8 @@ def smash(stdscr,brian):
 
 		dedeString = "King Dedede: Win Chance: " + str(dChance) + "% Air Time " + str(np.round(dededeAirTime * 16.677) / 1000) + "s Ground Attack?: " + str(doDrawAttack) + " Stock: " + str(curStockD)
 		kirbyString = "Kirby: Win Chance: " + str(kChance) + "% Air Time " + str(np.round(kirbyAirTime * 16.677) / 1000) + "s Ground Attack?: N/A Stock: " + str(curStockK)
-		pd.drawLabel(frame, dedeString, 100, 10, (200, 200, 200))
-		pd.drawLabel(frame, kirbyString, 150, 10, (200, 200, 200))
+		pd.drawLabel(frame, dedeString, 100, 10, (250, 100, 130 ))
+		pd.drawLabel(frame, kirbyString, 150, 10, (255, 177, 210))
 
 		#print stats.guessProspects(initStock, curStockD, curStockK, )
 		# for i in range(0, len(hammerAvg.getSet())):
