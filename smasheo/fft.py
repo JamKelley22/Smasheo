@@ -5,14 +5,11 @@ max16bit = 32768
 
 def fft(vec):
     N = len(vec)
-
     if N == 1:
         return [vec[0]]
-
     evens = []
     odds = []
     output = [0]*N
-
     fftEvens = fft(vec[::2])
     fftOdds = fft(vec[1::2])
     for k in range(0, N/2):
@@ -20,7 +17,6 @@ def fft(vec):
         product = exp.mult(fftOdds[k])
         output[k] = fftEvens[k].add(product)
         output[k + N / 2] = fftEvens[k].sub(product)
-
     return output
 
 def ifft(vec):

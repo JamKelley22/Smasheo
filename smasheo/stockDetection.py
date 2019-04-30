@@ -6,7 +6,6 @@ def getDededeStock(frm):
     newImg = frm[690:710,315:470]
     bw = cv2.cvtColor(newImg, cv2.COLOR_BGR2GRAY)
     dummy, bw = cv2.threshold(bw, 100, 255, cv2.THRESH_BINARY)
-    cv2.imshow("stock", bw)
     comps, output, stats, centroids = cv2.connectedComponentsWithStats(bw, connectivity=8)
     stocks = 0
     for i in range(1, len(stats)):
@@ -15,13 +14,13 @@ def getDededeStock(frm):
             stocks += 1
         else:
             return -1
+    cv2.imshow("Dedede stock", bw)
     return stocks
 
 def getKirbyStock(frm):
     newImg = frm[690:710,810:965]
     bw = cv2.cvtColor(newImg, cv2.COLOR_BGR2GRAY)
     dummy, bw = cv2.threshold(bw, 100, 255, cv2.THRESH_BINARY)
-    cv2.imshow("stockk", bw)
     comps, output, stats, centroids = cv2.connectedComponentsWithStats(bw, connectivity=8)
     stocks = 0
     for i in range(1, len(stats)):
@@ -30,4 +29,5 @@ def getKirbyStock(frm):
             stocks += 1
         else:
             return -1
+    cv2.imshow("Kirby stock", bw)
     return stocks
