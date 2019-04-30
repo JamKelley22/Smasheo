@@ -11,7 +11,6 @@ import curses
 import logging
 
 import playerInfo
-import damage
 import sys
 import Complex
 import fft
@@ -205,7 +204,6 @@ def smash(stdscr):
 	frame_height = int(vs.get(4))
 	fps = int(vs.get(5))
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-	#out = cv2.VideoWriter('outpy.avi',fourcc, fps, (frame_width,frame_height),1)
 
 	upSmashes = [4386749362,238792366]#audP.main()
 	width = int(vs.get(3))
@@ -236,6 +234,10 @@ def smash(stdscr):
 	dPosArr = []
 	#hm = heatmap.Heatmap()
 
+	actionFrames = deque([])
+	lastDStock = 2
+	lastKStock = 2
+
     # Loop where k is the last character pressed
 	while (k != ord('q')):
 
@@ -251,8 +253,9 @@ def smash(stdscr):
 
 		labelFrame, dedePos, hammerPos, kirbyPos, dMask = trackObjects(frame, hammerAvg)
 
-		kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
-		dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
+		if(count % 5 == 0):
+			kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
+			dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
 
 		# if(count % 20 == 0):
 		# 	dHeatmap = hm.heatmap(dPosArr,scheme='fire',size=(frame_width, frame_height))
@@ -263,7 +266,7 @@ def smash(stdscr):
 		# 	heatmapCombined = dHeatmap #+ kHeatmap
 		#cv2.imshow("h1",opencvImage)
 
-		dmg = damage.whatsYourDamage(frame,frame_width,frame_height)
+		dmg = playerInfo.whatsYourDamage(frame,frame_width,frame_height)
 		dmgD = damageToInt(dmg[0])
 		dmgK = damageToInt(dmg[1])
 		prevStockD = curStockD
@@ -289,10 +292,12 @@ def smash(stdscr):
 
 
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
+
 		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
 			initStock = curStockD
+			lastDStock = curStockD
 
 		hammerArea = hammerAvg.area()
 		dedeOnPlat = pd.onPlatform(dedePos)
@@ -313,20 +318,44 @@ def smash(stdscr):
 		# for i in range(0, len(hammerAvg.getSet())):
 		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
 		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
+				#
+				# #heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
+				# #cv2.imshow("Video", heatSuper)
+				# cv2.imshow("Video", labelFrame)
+				#
+				# if (cv2.waitKey(7) & 0xFF == ord('t')):
+				# 	tracker += 1
+				#
+				# if count > 1:
+				# 	print (float(tracker)/count)*100
+				# 	#out.write(frame)
+				# 	key = cv2.waitKey(1) & 0xFF
+				# 	if key == ord("q"):
+				# 		break
 
 		#heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
 		#cv2.imshow("Video", heatSuper)
-		cv2.imshow("Video", labelFrame)
 
-		if (cv2.waitKey(7) & 0xFF == ord('t')):
+		#==========Highlights====================
+		if curStockD != lastDStock or curStockK != lastKStock:
+			actionFrames.appendleft(count)
+			print("===================================================")
+
+		#cv2.imshow("Video", labelFrame)
+		#cv2.imshow("bw", dMask)
+
+
+		lastDStock = curStockD
+		lastKStock = curStockK
+
+		#if count > 1:
+			#print (float(tracker)/count)*100
+		#out.write(frame)
+		key = cv2.waitKey(1) & 0xFF
+		if key == ord("q"):
+			break
+		elif key == ord("t"):
 			tracker += 1
-
-		if count > 1:
-			print (float(tracker)/count)*100
-			#out.write(frame)
-			key = cv2.waitKey(1) & 0xFF
-			if key == ord("q"):
-				break
 
 		if(stdscr != None):
 			drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kChance)
@@ -335,6 +364,39 @@ def smash(stdscr):
 		count += 1
 
 	print np.sum(tracker), count
+
+	#==============Compile Highlights
+	out = cv2.VideoWriter('highlights.avi',fourcc, fps, (frame_width,frame_height),1)
+
+	vs_out = cv2.VideoCapture(args["video"])
+	count_out = 0
+	if actionFrames:
+		nextFrame = actionFrames.pop()
+	else:
+		vs_out.release()
+		vs.release()
+		sys.exit()
+	slice_thresh = 60#60 * 2 = 120 = 2 sec
+	print(actionFrames)
+	while(vs_out.isOpened()):
+		frame_out = vs_out.read()
+		frame_out = frame_out[1]
+		if abs(nextFrame - count_out < slice_thresh):
+			out.write(frame_out)
+			if actionFrames:
+				nextFrame = actionFrames.pop()
+			else:
+				break
+		if nextFrame <= count_out:
+			if actionFrames:
+				nextFrame = actionFrames.pop()
+			else:
+				break
+
+		count_out += 1
+		print(count_out)
+
+	vs_out.release()
 	vs.release()
 
 def initLogger():
@@ -357,7 +419,6 @@ def main():
 		smash(SCREEN)
 	else:
 		smash(None)
-	#out.release()
 	cv2.destroyAllWindows()
 
 main()
