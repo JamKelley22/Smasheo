@@ -24,7 +24,7 @@ VERSION = 0.1.0
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'cv2','numpy', 'imutils', 'argparse', 'matplotlib', 'collections'
+    'cv2','numpy', 'imutils', 'argparse', 'matplotlib', 'collections','tkinter'
 ]
 
 # What packages are optional?
@@ -90,7 +90,7 @@ class UploadCommand(Command):
         self.status('Pushing git tags…')
         os.system('git tag v{0}'.format(about['__version__']))
         os.system('git push --tags')
-        
+
         sys.exit()
 
 

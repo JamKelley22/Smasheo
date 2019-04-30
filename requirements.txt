@@ -5,3 +5,5 @@ numpy
 imutils
 argparse
 matplotlib
+pathlib
+tkinter
