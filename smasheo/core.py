@@ -37,7 +37,6 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 		else:
 			movesOnHold.append([0, time, count + 10])
 	if (doDrawAttack):
-		labelFrame = pd.drawAttack(labelFrame)
 		if (count - attackFrame >= 30):
 			doDrawAttack = False
 	removeLater = []
@@ -270,7 +269,7 @@ def smash(stdscr):
 		prevStockD = curStockD
 		prevStockK = curStockK
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
-
+		print curStockD, curStockK
 		if (prevStockD <= curStockD):
 			dif = 0
 			if (len(dededeKOTime) == 0):
@@ -290,7 +289,7 @@ def smash(stdscr):
 
 
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
-		#print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
 
 		if (count == 0):
 			initStock = curStockD
@@ -305,8 +304,8 @@ def smash(stdscr):
 		if (kirbyOnPlat == False):
 			kirbyAirTime += 1
 
-		dedeString = "King Dedede: Win Chance: " + str(dChance) + "% Air Time " + str(np.round(dededeAirTime * 16.677) / 1000) + "s Ground Attack?: " + str(doDrawAttack)
-		kirbyString = "Kirby: Win Chance: " + str(kChance) + "% Air Time " + str(np.round(kirbyAirTime * 16.677) / 1000) + "s Ground Attack?: N/A"
+		dedeString = "King Dedede: Win Chance: " + str(dChance) + "% Air Time " + str(np.round(dededeAirTime * 16.677) / 1000) + "s Ground Attack?: " + str(doDrawAttack) + " Stock: " + str(curStockD)
+		kirbyString = "Kirby: Win Chance: " + str(kChance) + "% Air Time " + str(np.round(kirbyAirTime * 16.677) / 1000) + "s Ground Attack?: N/A Stock: " + str(curStockK)
 		pd.drawLabel(frame, dedeString, 100, 10, (200, 200, 200))
 		pd.drawLabel(frame, kirbyString, 150, 10, (200, 200, 200))
 
@@ -318,13 +317,12 @@ def smash(stdscr):
 		#heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
 		#cv2.imshow("Video", heatSuper)
 		cv2.imshow("Video", labelFrame)
-		cv2.imshow("bw", dMask)
 
-		if (cv2.waitKey(25) & 0xFF == ord('t')):
+		if (cv2.waitKey(7) & 0xFF == ord('t')):
 			tracker += 1
 
 		if count > 1:
-			# 	print (float(tracker)/count)*100
+			print (float(tracker)/count)*100
 			#out.write(frame)
 			key = cv2.waitKey(1) & 0xFF
 			if key == ord("q"):
