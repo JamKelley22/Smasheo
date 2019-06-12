@@ -65,9 +65,3 @@ def matrixToCSV(mat, outputDir):
         f.write("\n")
         mag.write("\n")
         db.write("\n")
-
-# def parseFromCSV(dir):
-#     file = open(dir, 'r')
-#     reader = csv.reader(file, delimiter = ',')
-#     mat = []
-#     for row in

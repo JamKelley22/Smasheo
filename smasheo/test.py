@@ -31,12 +31,12 @@ def getFFTMatrix(input, out, mp4, fftsize):
     audio.close()
     complexNums = map(cmplx.Complex, bytes)
 
-    print len(complexNums)
-    print "Samples: " + str(len(bytes))
+    print(len(complexNums))
+    print("Samples: " + str(len(bytes)))
     mat = []
     prev = []
     ifft = []
-    print len(mat)
+    print(len(mat))
     # for i in range(0, len(complexNums)):
     #     multiplier = 0.5 * (1 - np.cos(2 * np.pi * i / (fftsize - 1)))
     #     complexNums[i] = complexNums)[i].scale(multiplier)
@@ -78,7 +78,7 @@ def correlateMatches(mat1, mat2, duration, timeVec, matches, FFTSize):
                 # if k >= 5 and numTwos < 5:
                 #     break
         if numTwos > 1:
-            print timeVec[i], numTwos
+            print(timeVec[i], numTwos)
             output.append(timeVec[i])
         numTwos = 0
     return output
@@ -91,10 +91,10 @@ def getAllMatches2(mat1, mat2, timeList, FFTSize):
     nTimeList = []
     atLeastCount = 0
     if len(mat1) < len(mat2) :
-        print "size mismatch"
+        print("size mismatch")
         return
     if len(mat1[0]) != len(mat2[0]):
-        print "Bin mismatch"
+        print("Bin mismatch")
         return
     mat2FreqIndex = 0
     #For every vector in mat1, compare it to every vector in mat2
@@ -110,7 +110,7 @@ def getAllMatches2(mat1, mat2, timeList, FFTSize):
         if (atLeastCount >= 1000 and atLeastCount <= 3000 ):
             output.append(i)
             nTimeList.append(timeList[i])
-            print timeList[i], i, atLeastCount
+            print(timeList[i], i, atLeastCount)
         atLeastCount = 0
     return output, nTimeList
 
@@ -121,7 +121,7 @@ def getAllMatches(mat1, mat2, duration, FFTSize):
         print("The first matrix needs to be bigger than the second")
         return
     if len(mat1[0]) != len(mat2[0]):
-        print "Frequency bin size mismatch"
+        print("Frequency bin size mismatch")
     numCloseMatches = 0
     mat2FreqIndex = 0
     avgPhase = 0
@@ -168,10 +168,10 @@ def getAllMatches(mat1, mat2, duration, FFTSize):
                 ccMagAvg/= len(mat2) * NUM_BINS
                 ccSelfMagAvg /= len(mat2)
                 time = i * timeSampleRatio
-                print numCloseMatches, time, (avgReal/avgImag), magSum, avgMag, sumPhase, avgPhase, avgReal, avgImag
+                print(numCloseMatches, time, (avgReal/avgImag), magSum, avgMag, sumPhase, avgPhase, avgReal, avgImag)
                 output.append(i * timeSampleRatio)
-                print ccMag, ccMag * numCloseMatches
-                print ccMagAvg/len(mat2), ccSelfMag, "dI", ccMag, ccSelfMag, ccSelfMagAvg
+                print(ccMag, ccMag * numCloseMatches)
+                print(ccMagAvg/len(mat2), ccSelfMag, "dI", ccMag, ccSelfMag, ccSelfMagAvg)
 
             correlationVec = []
             ccMagAvg = 0
@@ -214,27 +214,16 @@ def main():
         if (delta <= 150000000):
             refMat1.append(mat1[i])
             timeList.append(time)
-            print time, imag, imag2, delta
+            print(time, imag, imag2, delta)
         mat2Count += 1
         if mat2Count == len(mat2):
             mat2Count = 0
-    # for i in range (0, len(mat2)/2):
-    #     for j in range(0, len(mat2)/2):
-    #         cc = stats.crossCorrelate(mat2[i], mat3[i], j)
-    #         ccSelf = stats.crossCorrelate(mat2[i], mat2[i], j)
-    #         ccMag = np.sqrt(cc[0] * cc[0] + cc[1] * cc[1])
-    #         ccSelfMag = np.sqrt(ccSelf[0] * ccSelf[0] + ccSelf[1] * ccSelf[1])
-    #         print np.sqrt(cc[0] * cc[0] + cc[1] * cc[1]), ccSelf, cc, ccMag, ccSelfMag, ccSelfMag - ccMag, i, j
-    #fft.matrixToCSV(mat2, "./dededeFFT512")
 
-    print "finished FFT"
-    print duration
+    print("finished FFT")
+    print(duration)
     matches,nTimes = getAllMatches2(refMat1, mat2, timeList, fftSize)
-    print matches
-    #times = correlateMatches(mat1, mat2, duration, nTimes, matches, fftSize)
-    #print times
-    #times = correlateMatches(mat1, mat2, duration, matches, fftSize)
-    print "finished searching"
+    print(matches)
+    print("finished searching")
 
     return nTimes
 

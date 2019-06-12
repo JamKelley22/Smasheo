@@ -4,10 +4,8 @@ import numpy as np
 import imutils
 import argparse
 from collections import deque
-import Tkinter as tk
 import threading
 import curses
-#import heatmap
 import logging
 try:
 	import heatmap
@@ -25,8 +23,6 @@ import stockDetection
 import playerDetection as pd
 import stats
 
-#def checkWithinAcceptableLimit(avg, elem, movAvg):
-
 def drawOutcome(frm, dedeChance, kirbyChance):
 	return
 
@@ -36,7 +32,6 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 		if (hammerArea >= pd.UP_HAMM_AREA_MIN and dedeOnPlat):
 			doDrawAttacks = True
 			attackFrame = count
-			#print timeStamp, upSmashes[0]
 		else:
 			movesOnHold.append([0, time, count + 10])
 	if (doDrawAttack):
@@ -57,16 +52,10 @@ def handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doD
 def trackObjects(frame, hammerAvg):
 	dedePos, dMask = pd.findDedede(frame)
 	kirbyPos = pd.findKirby(frame)
-	#gordoPos = pd.findGordo(frame)
-	#bsPos, bMask = pd.findRedShield(frame)
 	labelFrame = pd.drawLabel(frame, dedePos[4], dedePos[1], dedePos[0], (0, 0, 255))
 	labelFrame = pd.drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
 	hammerPos = pd.findHammer(labelFrame)
 	labelFrame = pd.drawLabel(labelFrame, hammerPos[4], hammerPos[1], hammerPos[0], (0, 0, 255))
-	#labelFrame = pd.drawLabel(labelFrame, gordoPos[4], gordoPos[1], gordoPos[0], (0, 0, 255))
-	#labelFrame = pd.drawLabel(labelFrame, bsPos[4], bsPos[1], bsPos[0], (0, 0, 255))
-	hammerAvg.insert((hammerPos[0], hammerPos[1]))
-	#cv2.imshow("red shield", bMask)
 	return labelFrame, dedePos, hammerPos, kirbyPos, dMask
 
 def trackStock(curStockD, curStockK, labelFrame, count):
@@ -132,8 +121,6 @@ def drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kC
 	start_x_right = (width - int((width // 3)) - (len(dmgD_s) // 2) - len(dmgD_s) % 2)
 
 	# Rendering some text
-	#whstr = "Width: {}, Height: {}".format(width, height)
-	#stdscr.addstr(0, 0, whstr, curses.color_pair(1))
 
 	# Render status bar
 	stdscr.attron(curses.color_pair(3))
@@ -154,8 +141,6 @@ def drawText(stdscr,k,cursor_x,cursor_y,dmgD,dmgK,curStockD,curStockK,dChance,kC
 
 	# Print rest of text
 	stdscr.addstr(1, start_x_subtitle, subtitle)
-	#stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
-	#stdscr.addstr(start_y + 5, start_x_keystr, keystr)
 	#left
 	stdscr.attron(curses.color_pair(1))
 	stdscr.addstr(start_y, start_x_left, "Kirby")
@@ -260,7 +245,7 @@ def smash(stdscr,brian):
 
 		if(count % 5 == 0):
 			kPosArr.append((kirbyPos[0],frame_height - kirbyPos[1]))
-			dPosArr.append((dedePos[0],frame_height - dedePos[1]))#Why???
+			dPosArr.append((dedePos[0],frame_height - dedePos[1]))
 
 		if(not brian):
 			if(count % 20 == 0):
@@ -269,8 +254,7 @@ def smash(stdscr,brian):
 
 				dHeatmap = cv2.cvtColor(np.array(dHeatmap), cv2.COLOR_RGB2BGR)
 				kHeatmap = cv2.cvtColor(np.array(kHeatmap), cv2.COLOR_RGB2BGR)
-				heatmapCombined = dHeatmap #+ kHeatmap
-		#cv2.imshow("h1",opencvImage)
+				heatmapCombined = dHeatmap
 
 		dmg = playerInfo.whatsYourDamage(frame,frame_width,frame_height)
 		dmgD = damageToInt(dmg[0])
@@ -278,14 +262,13 @@ def smash(stdscr,brian):
 		prevStockD = curStockD
 		prevStockK = curStockK
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
-		print curStockD, curStockK
+		print(curStockD, curStockK)
 		if (prevStockD <= curStockD):
 			dif = 0
 			if (len(dededeKOTime) == 0):
 				dif = count
 			else:
 				dif = count - dededeKOTime[len(dededeKOTime) - 1]
-			#dededeKOTime.append(dif)
 			if count > 10:
 				actionFrames.appendleft(count)
 
@@ -295,16 +278,12 @@ def smash(stdscr,brian):
 				dif = count
 			else:
 				dif = count - kirbyKOTime[len(kirbyKOTime) - 1]
-			#kirbyKOTime.append(dif)
 			if count > 10:
 				actionFrames.appendleft(count)
 
-		#print dededeKOTime
-
-
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
 
-		print dmgD, dmgK, curStockD, curStockK, dChance, kChance
+		print(dmgD, dmgK, curStockD, curStockK, dChance, kChance)
 
 		if (count == 0):
 			initStock = curStockD
@@ -314,7 +293,7 @@ def smash(stdscr,brian):
 		dedeOnPlat = pd.onPlatform(dedePos)
 		kirbyOnPlat = pd.onPlatform(kirbyPos)
 		upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedePos = handleAttacks(upSmashes, timeStamp, hammerArea, dedeOnPlat, movesOnHold, doDrawAttack, labelFrame, attackFrame, count, dedeAvg)
-		#print(timeStamp)
+
 		if (dedeOnPlat == False):
 			dededeAirTime += 1
 		if (kirbyOnPlat == False):
@@ -325,26 +304,15 @@ def smash(stdscr,brian):
 		pd.drawLabel(frame, dedeString, 100, 10, (250, 100, 130 ))
 		pd.drawLabel(frame, kirbyString, 150, 10, (255, 177, 210))
 
-		#print stats.guessProspects(initStock, curStockD, curStockK, )
-		# for i in range(0, len(hammerAvg.getSet())):
-		# 	pd.drawPoint(labelFrame, hammerAvg.getSet()[i])
-		#dedeFrame = cv2.cvtColor(dedeFrame, cv2.COLOR_BGR2HSV)
 		if(not brian):
 			heatSuper = cv2.addWeighted(labelFrame, 0.7, heatmapCombined, 0.3, 0)
 			cv2.imshow("Video", heatSuper)
 		else:
 			cv2.imshow("Video", labelFrame)
 
-		#cv2.imshow("Video", labelFrame)
-		#cv2.imshow("bw", dMask)
-
-
 		lastDStock = curStockD
 		lastKStock = curStockK
 
-		#if count > 1:
-			#print (float(tracker)/count)*100
-		#out.write(frame)
 		key = cv2.waitKey(1) & 0xFF
 		if key == ord("q"):
 			break
@@ -357,7 +325,7 @@ def smash(stdscr,brian):
 
 		count += 1
 
-	print np.sum(tracker), count
+	print(np.sum(tracker), count)
 
 	#==============Compile Highlights
 	out = cv2.VideoWriter('highlights.avi',fourcc, fps, (frame_width,frame_height),1)
@@ -402,7 +370,6 @@ def initLogger():
 	hdlr.setFormatter(formatter)
 	logger.addHandler(hdlr)
 	logger.setLevel(logging.DEBUG)
-	#logger.info("begin")
 	return logger
 
 def main():

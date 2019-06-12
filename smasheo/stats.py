@@ -42,7 +42,6 @@ def crossCorrelate(signal1, signal2, delay):
         subImag = 0
         for j in range(0, size):
             k = j + i
-            #print i, j, k, size
             if k < 0 or k >= size:
                 continue
             else:
@@ -90,12 +89,5 @@ def guessProspects(initStock, stockD, stockK, avgStockTimeD, avgStockTimeK):
     elif stockK < stockD:
         dedeChance += (stockK - stockD) * 25
         kirbyChance -= (stockK - stockD) * 25
-
-    # if damageD < damageK:
-    #     dedeChance -= ((damageK - damageD)/5) / stockD
-    #     kirbyChance += ((damageK - damageD)/5) / stockD
-    # elif damageK > damageD:
-    #     dedeChance += ((damageD - damageK)/5) / stockD
-    #     kirbyChance -= ((damageD - damageK)/5) / stockD
 
     return kirbyChance, dedeChance

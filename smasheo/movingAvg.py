@@ -63,4 +63,4 @@ class MovingAvg:
         return self.set
 
     def printSet(self):
-        print self.set
+        print(self.set)
