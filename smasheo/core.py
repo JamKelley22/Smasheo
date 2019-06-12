@@ -10,7 +10,7 @@ import logging
 try:
 	import heatmap
 except ImportError:
-    print("Cannot import heatmap")
+    print("WARNING: Cannot import heatmap")
 
 import playerInfo
 import sys
@@ -194,7 +194,7 @@ def smash(stdscr,brian):
 	fps = int(vs.get(5))
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 
-	upSmashes = [4386749362,238792366]#audP.main()
+	upSmashes = audP.main()
 	width = int(vs.get(3))
 	height = int(vs.get(4))
 	pd.width = width
@@ -262,7 +262,6 @@ def smash(stdscr,brian):
 		prevStockD = curStockD
 		prevStockK = curStockK
 		curStockD, curStockK = trackStock(curStockD, curStockK, labelFrame, count)
-		print(curStockD, curStockK)
 		if (prevStockD <= curStockD):
 			dif = 0
 			if (len(dededeKOTime) == 0):
@@ -282,8 +281,6 @@ def smash(stdscr,brian):
 				actionFrames.appendleft(count)
 
 		dChance, kChance = stats.guessProspects(initStock, curStockD, curStockK, dmgD, dmgK)
-
-		print(dmgD, dmgK, curStockD, curStockK, dChance, kChance)
 
 		if (count == 0):
 			initStock = curStockD
@@ -325,8 +322,6 @@ def smash(stdscr,brian):
 
 		count += 1
 
-	print(np.sum(tracker), count)
-
 	#==============Compile Highlights
 	out = cv2.VideoWriter('highlights.avi',fourcc, fps, (frame_width,frame_height),1)
 
@@ -340,8 +335,6 @@ def smash(stdscr,brian):
 		sys.exit()
 
 	slice_thresh = 30
-	print("Action Frames")
-	print(actionFrames)
 	while(vs_out.isOpened()):
 		frame_out = vs_out.read()
 		frame_out = frame_out[1]
@@ -358,7 +351,6 @@ def smash(stdscr,brian):
 				break
 
 		count_out += 1
-		print(count_out)
 
 	vs_out.release()
 	vs.release()

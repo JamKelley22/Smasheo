@@ -27,19 +27,16 @@ def getFFTMatrix(input, out, mp4, fftsize):
     fmt = {1:'B',2:'h',4:'i'}
     size = fmt[audio.getsampwidth()]
     a = array.array(size)
-    a.fromfile(open(out, 'rb'), os.path.getsize(out)/a.itemsize)
+    a.fromfile(open(out, 'rb'), int(os.path.getsize(out) / a.itemsize))
     bytes = a.tolist()
     audio.close()
-    complexNums = map(cmplx.Complex, bytes)
+    complexNums = list(map(cmplx.Complex, bytes))
 
-    print(len(complexNums))
-    print("Samples: " + str(len(bytes)))
     mat = []
     prev = []
     ifft = []
-    print(len(mat))
 
-    for i in range(1, len(complexNums)/fftsize):
+    for i in range(1, len(complexNums)//fftsize):
         start = (i - 1) * fftsize
         stop  = i * fftsize
         mat.append(fft.fft(complexNums[start:stop]))
@@ -53,8 +50,8 @@ def correlateVectors(mat1, mat2, duration, FFTSize):
     timeList = []
     refMat1 = []
     for i in range(0, len(mat1)):
-        vec1 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat2[mat2Count][0:NUM_BINS])
-        vec3 = map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat1[i][0:NUM_BINS])
+        vec1 = list(map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat2[mat2Count][0:NUM_BINS]))
+        vec3 = list(map(lambda x:np.sqrt(x.real * x.real + x.imag * x.imag), mat1[i][0:NUM_BINS]))
         imag = np.correlate(vec1, vec1)
         imag2 = np.correlate(vec1, vec3)
         time = i * (duration/len(mat1))
@@ -62,7 +59,6 @@ def correlateVectors(mat1, mat2, duration, FFTSize):
         if (delta <= 1000000000):
             refMat1.append(mat1[i])
             timeList.append(time)
-            print(time, imag, imag2, delta)
         mat2Count += 1
         if mat2Count == len(mat2):
             mat2Count = 0
@@ -90,7 +86,6 @@ def correlateMatches(mat1, mat2, duration, timeVec, matches, FFTSize):
                 if np.abs(refMat[j][k] - rMag) <= 1.5:
                     numTwos += 1
         if numTwos > 1:
-            print(timeVec[i], numTwos)
             output.append(timeVec[i])
         numTwos = 0
     return output
@@ -102,7 +97,7 @@ def compareIntensities(mat1, mat2, timeList, FFTSize):
     nTimeList = []
     atLeastCount = 0
     if len(mat1[0]) != len(mat2[0]):
-        print("Bin mismatch")
+        print("Fatal: Bin mismatch")
         return
     mat2FreqIndex = 0
     for i in range(0, len(mat1)):
@@ -119,7 +114,6 @@ def compareIntensities(mat1, mat2, timeList, FFTSize):
         if (atLeastCount >= 160000):
             output.append(i)
             nTimeList.append(timeList[i])
-            print(timeList[i], i, atLeastCount)
         atLeastCount = 0
     return output, nTimeList
 
@@ -144,11 +138,18 @@ def getAudioDuration(directory):
 
 def main():
     fftSize = 256
-    duration = getAudioDuration("../Audio/games/audio4.wav")
-    mat2 = getFFTMatrix("../Audio/King Dedede Sounds/dedeHammerSwing.wav", "../Audio/King Dedede Sounds/dedeHammerSwing.wav", False, fftSize)
-    mat1 = getFFTMatrix("../replays/replay4.mp4", "../Audio/games/audio4.wav", True, fftSize)
+    print("INFO: Beginning first FFT")
+    duration = getAudioDuration("C:/Users/brian/Documents/Smasheo/Audio/games/audio4.wav")
+    mat2 = getFFTMatrix("C:/Users/brian/Documents/Smasheo/Audio/King Dedede Sounds/dedeHammerSwing.wav", "C:/Users/brian/Documents/Smasheo/Audio/King Dedede Sounds/dedeHammerSwing.wav", False, fftSize)
+    print("INFO: Finished first FFT")
+    print("INFO: Started second FFT")
+    mat1 = getFFTMatrix("C:/Users/brian/Documents/Smasheo/replays/replay4.mp4", "C:/Users/brian/Documents/Smasheo/Audio/games/audio4.wav", True, fftSize)
+    print("INFO: Finished second FFT")
+    print("INFO: Started cross-correlation")
     timeList, refMat1 = correlateVectors(mat1, mat2, duration, fftSize)
-    print("finished FFT")
+    print("INFO: Finished cross-correlation")
+    print("INFO: Started intensity comparisons")
     matches,nTimes = compareIntensities(refMat1, mat2, timeList, fftSize)
-    print("finished searching")
+    print("INFO: Finished intensity comparisons")
+    print("INFO: finished searching")
     return nTimes
