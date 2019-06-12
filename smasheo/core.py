@@ -56,6 +56,7 @@ def trackObjects(frame, hammerAvg):
 	labelFrame = pd.drawLabel(labelFrame, kirbyPos[4], kirbyPos[1], kirbyPos[0], (0, 0, 255))
 	hammerPos = pd.findHammer(labelFrame)
 	labelFrame = pd.drawLabel(labelFrame, hammerPos[4], hammerPos[1], hammerPos[0], (0, 0, 255))
+	hammerAvg.insert((hammerPos[0], hammerPos[1]))
 	return labelFrame, dedePos, hammerPos, kirbyPos, dMask
 
 def trackStock(curStockD, curStockK, labelFrame, count):
