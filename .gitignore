@@ -9,9 +9,12 @@ __pycache__/
 # Audio and Video
 *.mp4
 *.wav
+*.avi
 
 #text
 *.csv
+*.csv#
+*.log
 
 # Distribution / packaging
 .Python
